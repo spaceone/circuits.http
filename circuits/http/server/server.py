@@ -8,11 +8,11 @@ from types import GeneratorType
 
 from circuits import BaseComponent, handler
 from circuits.net.utils import is_ssl_handshake
-from circuits.net.events import close, write
+from circuits.net.events import close, write, read
 from circuits.http.wrapper import Client, Server
 from circuits.http.events import HTTPError, request as RequestEvent, response as ResponseEvent, stream
 
-from httoop import HTTPStatusException
+from httoop import HTTPStatusException, INTERNAL_SERVER_ERROR, Response
 from httoop.server import ServerStateMachine, ServerPipeline
 
 
@@ -143,6 +143,73 @@ class HTTP(BaseComponent):
 
 		self.fire(ResponseEvent(client))
 
+	@handler("request_failure")
+	def _on_request_failure(self, evt, error):
+		"""Handler for exceptions occuring in the request or response event handler"""
+		client = evt.args[0]
+
+#		if client.redirected:
+#			return
+#		if isinstance(evalue, InternalRedirect):
+#			client.request.uri = evalue.uri
+#			client.redirected = True
+#			self.fire(Request(client))
+#			return
+
+		# Ignore filtered requests already handled
+		if client.handled:
+			return
+
+		# recursion impossible :)
+		client.handled = True
+
+		self._handle_exception(client, error)
+
+	@handler("response_failure")
+	def _on_response_failure(self, evt, error):
+		client = evt.args[0]
+
+		# Ignore failed "response" handlers (e.g. Loggers or Tools)
+		if client.done:
+			return
+
+		# Ignore disconnected clients
+		if client.socket not in self._buffers:
+			client.response.body.close()
+			return
+
+		# FIXME: remove, it may breaks pipelining
+		# creating a new response is better than removing all headers, etc. =)
+		client.response = Response(status=500)
+		self._response_to_client[client.response] = client
+		client.done = True
+
+		self._handle_exception(client, error)
+
+	@handler("httperror_failure", "httperror_success_failure")
+	def _on_httperror_failure(self, evt, error):
+		# TODO: log
+		# FIXME: success_failure will fail, due to argument
+		client = evt.args[0]
+		socket = client.socket
+		self.fire(write(socket, b'%s\r\n' % (Response(status=500),))) # TODO: self.default_internal_server_error
+		self.fire(close(socket))
+
+	@handler("error")
+	def _on_error(self, etype, evalue, traceback, handler=None, fevent=None):
+		if isinstance(fevent, read):
+			socket = fevent.args[0]
+			self.fire(close(socket))
+		elif isinstance(fevent, (RequestEvent, ResponseEvent, HTTPError)):
+			pass # already handled
+		elif isinstance(fevent, stream):
+			socket = fevent.args[0].socket
+			self.fire(close(socket))
+		else:
+			# TODO: log
+			# print '## handler=', repr(handler), '## fevent=', repr(fevent)
+			pass
+
 	@handler("disconnect", "close")
 	def _on_disconnect_or_close(self, socket=None):
 		if not socket:
@@ -163,3 +230,10 @@ class HTTP(BaseComponent):
 			bytes(response.body)
 		response.body.close()
 		self._response_to_client.pop(response, None)
+
+	def _handle_exception(self, client, error):
+		etype, httperror, traceback = error
+		if not isinstance(httperror, HTTPStatusException):
+			httperror = INTERNAL_SERVER_ERROR('%s (%s)' % (etype.__name__, httperror))
+		httperror.traceback = traceback
+		self.fire(HTTPError(client, httperror))
