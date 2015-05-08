@@ -45,11 +45,3 @@ class routing(Event):
 	"""
 	success = True
 	failure = True
-
-
-class stream(Event):
-	"""Streaming of message body event
-
-		args: (client,)
-	"""
-	complete = True

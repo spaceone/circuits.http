@@ -6,11 +6,11 @@ from __future__ import unicode_literals
 
 from types import GeneratorType
 
-from circuits import BaseComponent, handler
+from circuits import BaseComponent, handler, Event
 from circuits.net.utils import is_ssl_handshake
 from circuits.net.events import close, write, read
 from circuits.http.wrapper import Client, Server
-from circuits.http.events import HTTPError, request as RequestEvent, response as ResponseEvent, stream
+from circuits.http.events import HTTPError, request as RequestEvent, response as ResponseEvent
 
 from httoop import HTTPStatusException, INTERNAL_SERVER_ERROR, Response
 from httoop.server import ServerStateMachine, ServerPipeline
@@ -84,15 +84,18 @@ class HTTP(BaseComponent):
 		if not pipeline.ready(response):
 			return  # a previous request is unfinished
 
+		pipeline.compose(request, response)
+		pipeline + (request, response)
+
 		# send HTTP response status line and headers
 		bresponse = bytes(response)
 		bheaders = bytes(headers)
 
 		self.fire(write(socket, b'%s%s' % (bresponse, bheaders)))
-		yield self.fire(stream(client))
+		yield self.wait(self.fire(Event.create(b'response.body', client)).event)
 
-	@handler("stream")
-	def _on_stream(self, client):
+	@handler("response.body")
+	def _on_response_body(self, client):
 		"""stream the response output"""
 
 		request, response = client
@@ -105,13 +108,13 @@ class HTTP(BaseComponent):
 			#if response.close:
 			#	self.fire(close(socket))
 			client.done = True
+			yield self.fire(Event.create(b'response.complete', client))
 		else:
 			self.fire(write(socket, data))
-			yield self.fire(stream(client))
+			yield self.fire(Event.create(b'response.body', client))
 
-	@handler('stream_complete')
-	def _on_stream_finished(self, evt, value):
-		client = evt.args[0]
+	@handler('response.complete')
+	def _on_response_finished(self, client):
 		socket = client.socket
 		self._response_to_client.pop(client.response, None)
 		try:
@@ -119,6 +122,7 @@ class HTTP(BaseComponent):
 		except KeyError:  # client disconnected
 			self._premature_client_disconnect(client)
 			return
+		pipeline - tuple(client)
 		try:
 			response = next(pipeline)
 		except StopIteration:  # no more requests in the pipeline
@@ -202,7 +206,7 @@ class HTTP(BaseComponent):
 			self.fire(close(socket))
 		elif isinstance(fevent, (RequestEvent, ResponseEvent, HTTPError)):
 			pass # already handled
-		elif isinstance(fevent, stream):
+		elif fevent.name == 'response.body':
 			socket = fevent.args[0].socket
 			self.fire(close(socket))
 		else:
