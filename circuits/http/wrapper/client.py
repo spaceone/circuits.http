@@ -64,4 +64,4 @@ class Client(object):
 		return hash(id(self))
 
 	def __repr__(self):
-		return '<Client(%r, request(%x), response(%x), id=%x)>' % (self.remote.ip, id(self.request), id(self.response), id(self))
+		return '<Client(0x%x, socket(%x), request(%x), response(%x))>' % (id(self), id(self.socket), id(self.request), id(self.response))
