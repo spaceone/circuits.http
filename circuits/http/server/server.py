@@ -15,6 +15,10 @@ from circuits.http.events import HTTPError, request as RequestEvent, response as
 from httoop import HTTPStatusException, INTERNAL_SERVER_ERROR, Response
 from httoop.server import ServerStateMachine, ComposedResponse
 
+_ResponseStart = type(b'response.start', (Event,), {})
+_ResponseBody = type(b'response.body', (Event,), {})
+_ResponseComplete = type(b'response.complete', (Event,), {})
+
 
 class HTTP(BaseComponent):
 	"""HTTP Server Protocol Component
@@ -86,7 +90,7 @@ class HTTP(BaseComponent):
 		if not pipeline or pipeline[0] is not client:
 			return  # a previous request is unfinished
 
-		self.fire(Event.create(b'response.start', client))
+		self.fire(_ResponseStart(client))
 
 	@handler('response.start')
 	def _on_response_start(self, client):
@@ -111,8 +115,8 @@ class HTTP(BaseComponent):
 		bresponse = bytes(response)
 		bheaders = bytes(response.headers)
 
-		self.fire(write(socket, b'%s%s' % (bresponse, bheaders)))
-		yield self.wait(self.fire(Event.create(b'response.body', client)).event)
+		yield self.call(write(socket, b'%s%s' % (bresponse, bheaders)))
+		yield self.wait(self.fire(_ResponseBody(client)).event)
 
 	@handler("response.body")
 	def _on_response_body(self, client):
@@ -128,10 +132,10 @@ class HTTP(BaseComponent):
 			#if response.close:
 			#	self.fire(close(socket))
 			client.done = True
-			yield self.fire(Event.create(b'response.complete', client))
+			yield self.fire(_ResponseComplete(client))
 		else:
 			self.fire(write(socket, data))
-			yield self.fire(Event.create(b'response.body', client))
+			yield self.fire(_ResponseBody(client))
 
 	@handler('response.complete')
 	def _on_response_complete(self, client):
@@ -153,7 +157,7 @@ class HTTP(BaseComponent):
 				self.fire(close(socket))
 		else:
 			if client_ in state['responses'] and client_ not in state['response_started']:
-				self.fire(Event.create(b'response.start', client_))
+				self.fire(_ResponseStart(client_))
 
 	@handler("httperror_success")
 	def _on_httperror(self, client, httperror):
