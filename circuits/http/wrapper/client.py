@@ -60,5 +60,8 @@ class Client(object):
 		"""(request, response) = client"""
 		return (self.request, self.response).__iter__()
 
+	def __hash__(self):
+		return hash(id(self))
+
 	def __repr__(self):
 		return '<Client(%r, request(%x), response(%x), id=%x)>' % (self.remote.ip, id(self.request), id(self.response), id(self))
