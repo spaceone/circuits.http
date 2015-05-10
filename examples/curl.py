@@ -7,7 +7,9 @@ from argparse import ArgumentParser
 from httoop import Request
 
 from circuits import Debugger, handler, BaseComponent
-from circuits.http.client import HTTPClient, request as RE
+from circuits.http.client import HTTPClient
+from circuits.http.events import request as RequestEvent
+from circuits.http.wrapper import Client
 
 
 class Curl(HTTPClient):
@@ -88,16 +90,18 @@ class Curl(HTTPClient):
 				request.body = data
 				request.method = a.request or 'POST' if not a.get else 'GET'
 
-		self.fire(RE(request))
+		client = Client(request, None)
+		self.fire(RequestEvent(client))
 
 	@handler('request_success')
-	def request(self, evt, request):
+	def request(self, evt, client):
 		if self.arguments.verbose:
-			self.arguments.stderr.write(bytes(request))
-			self.arguments.stderr.write(bytes(request.headers))
+			self.arguments.stderr.write(bytes(client.request))
+			self.arguments.stderr.write(bytes(client.request.headers))
 
 	@handler('response_success')
-	def response(self, evt, response):
+	def response(self, evt, client):
+		request, response = client
 		if self.arguments.head:
 			self.arguments.output.write(bytes(response))
 			self.arguments.output.write(bytes(response.headers))
