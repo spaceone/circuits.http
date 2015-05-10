@@ -4,75 +4,92 @@ from circuits.core import handler, BaseComponent, Event
 from circuits.net.sockets import TCPClient
 from circuits.net.events import close, connect, write
 
+from circuits.http.wrapper import Client
+from circuits.http.events import response as ResponseEvent
+
 from httoop import ClientStateMachine
 from httoop.client import ComposedRequest
 
 
-class request(Event):
-	success = True
-	failure = True
-#	complete = True
-
-
-class response(Event):
-	success = True
-	failure = True
-#	complete = True
-
-
-
 class HTTPClient(BaseComponent):
-
-	@property
-	def connected(self):
-		if hasattr(self, "socket"):
-			return self.socket.connected
-
-	socket = None
 
 	def __init__(self, channel):
 		super(HTTPClient, self).__init__(channel=channel)
-		if self.socket is None:
-			self.socket = TCPClient(channel=channel).register(self)
+		self._buffers = {}
+		self._socket_map = {}
+		self._channel_sock = {}
 		self.state_machine = ClientStateMachine()
 
-	@handler("close")
-	def __on_close(self):
-		if self.socket.connected:
-			self.fire(close(), self.socket)
+#	@handler("close")
+#	def _on_close(self):  # FIXME: socket argument missing
+#		if self.socket.connected:
+#			self.fire(close(), self.socket)
 
-	@handler("connect", priority=1)
-	def __on_connect(self, event, host=None, port=None, secure=None):
-		if not self.socket.connected:
-			self.fire(connect(host, port, secure), self.socket)
+	@handler('connect', priority=1.0)
+	def _on_connect(self, event, host=None, port=None, secure=None):
+		try:
+			socket = self._socket_map[(host, port, secure)]
+		except KeyError:
+			socket = TCPClient(channel='%s_%d' % (self.channel, len(self._buffers))).register(self)
+			state = self._buffers[socket] = {
+				'parser': ClientStateMachine(),
+				'socket': socket,
+				'requests': [],
+				'responses': [],
+			}
+			self._socket_map[(host, port, secure)] = socket
+			self._channel_sock[socket.channel] = socket
+		if not socket.connected:
+			self.fire(connect(host, port, secure), socket)
+		#event.stop()  # FIXME: self.call does conflict with this
+		return socket
 
-		event.stop()
+	@handler('request')
+	def _on_request(self, client):
+		if client.socket is None:
+			host = client.request.uri.host
+			port = client.request.uri.port
+			secure = client.request.uri.scheme == u'https'
+			event = yield self.call(connect(host, port, secure))
+			client.socket = event.value
+			yield self.wait("connected", client.socket.channel)
 
-	@handler("request")
-	def __on_request(self, request):
+		try:
+			state = self._buffers[client.socket]
+		except KeyError:
+			return  # server disconnected
 
-		if not self.socket.connected:
-			host = request.uri.host
-			port = request.uri.port
-			secure = request.uri.scheme == u'https'
-			self.fire(connect(host, port, secure))
-			yield self.wait("connected", self.socket.channel)
-
-		composer = ComposedRequest(request)
+		state['requests'].append(client)
+		composer = ComposedRequest(client.request)
 		composer.prepare()
 		for data in composer:
-			self.fire(write(data), self.socket)
+			self.fire(write(data), client.socket)
 
-		yield request
-		#yield (yield self.wait("response"))  # TODO: reimplement when we use client as argument
+		yield client
+		#yield (yield self.wait("response"))
 
-	@handler("read")
-	def __on_read(self, data):
-		for response_ in self.state_machine.parse(data):
-			self.fire(response(response_))
+	@handler('read', channel='*')
+	def _on_read(self, event, data):
+		try:
+			sock = [self._channel_sock.get(channel) for channel in event.channels]
+			sock = [s for s in sock if s is not None][0]
+		except IndexError:
+			return  # socket does not belong to this component
+		try:
+			state = self._buffers[sock]
+		except KeyError:
+			return  # server disconnected
+		parser = state['parser']
+		for response_ in parser.parse(data):
+			try:
+				client = state['requests'].pop(0)
+			except IndexError:
+				pass  # broken server send another message
+			client.response = response_
+			self.fire(ResponseEvent(client))
 
 	@handler("response")
-	def __on_response(self, response):
-		if response.headers.get("Connection") == "close":  # TODO: ParsedResponse(response).close
-			self.fire(close(), self.socket)
-		return response
+	def _on_response(self, client):
+		if client.response.headers.get("Connection") == "close":  # TODO: ParsedResponse(response).close
+			self.fire(close(), client.socket)
+		return client
