@@ -10,7 +10,7 @@ from httoop import BAD_REQUEST, UNSUPPORTED_MEDIA_TYPE, DecodeError
 
 class RequestContentType(BaseComponent):
 
-	@handler('request', priority=0.45)
+	@handler('request', priority=0.55)
 	def decode_input_representation(self, client):
 
 		if client.method.safe and client.request.body:

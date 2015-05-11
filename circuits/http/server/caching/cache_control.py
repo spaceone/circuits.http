@@ -9,7 +9,7 @@ from circuits.http.utils import sets_header
 
 class CacheControl(BaseComponent):
 
-	@handler('request', priority=0.6)
+	@handler('request', priority=0.4)
 	@sets_header('Cache-Control', ifmethod=('GET', 'HEAD', 'OPTIONS'))
 	def set_cache_control_header(self, client):
 		if hasattr(client.resource, 'cache_control'):

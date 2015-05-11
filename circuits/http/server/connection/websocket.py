@@ -21,7 +21,7 @@ class Websocket(BaseComponent):
 		self._wschannel = wschannel or '%s-websocket' % (self.channel,)
 		self._codecs = {}
 
-	@handler('request', priority=0.2)
+	@handler('request', priority=0.8)
 	@if_header_set('Upgrade')
 	def _on_request(self, event, client):
 

@@ -9,7 +9,7 @@ from circuits.http.utils import sets_header
 
 class Vary(BaseComponent):
 
-	@handler('request', priority=0.60)
+	@handler('request', priority=0.40)
 	@sets_header('Vary', ifmethod=('GET', 'HEAD', 'OPTIONS'))
 	def _vary_header(self, client):
 		if hasattr(client.resource, 'vary'):

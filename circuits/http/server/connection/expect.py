@@ -12,7 +12,7 @@ from httoop import EXPECTATION_FAILED, CONTINUE, Response
 
 class Expect(BaseComponent):
 
-	@handler('request', priority=.1)
+	@handler('request', priority=.9)
 	@if_header_set('Expect', ifmethod=('POST', 'PUT'))
 	def expectatable(self, client):
 		if hasattr(client.resource, 'expect'):

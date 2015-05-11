@@ -11,7 +11,7 @@ from httoop import EXPECTATION_FAILED
 
 class IfRange(BaseComponent):
 
-	@handler('request', priority=0.31)
+	@handler('request', priority=0.69)
 	@if_header_set(('If-Range', 'Range'))
 	def if_range(self, client):
 		if_range = client.request.headers.get('If-Range')

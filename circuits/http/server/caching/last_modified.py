@@ -11,13 +11,13 @@ from httoop import InvalidDate, NOT_MODIFIED, BAD_REQUEST, PRECONDITION_FAILED
 
 class LastModified(BaseComponent):
 
-	@handler('request', priority=0.3)
+	@handler('request', priority=0.7)
 	@sets_header('Last-Modified')
 	def _last_modified_header(self, client):
 		if hasattr(client.resource, 'last_modified'):
 			return client.resource.last_modified(client)
 
-	@handler('request', priority=0.3101)
+	@handler('request', priority=0.6909)
 	@if_header_set('If-Modified-Since', ifmethod=('GET', 'HEAD'))
 	def conditional_get(self, client):
 		if 'Last-Modified' not in client.response.headers:
@@ -31,7 +31,7 @@ class LastModified(BaseComponent):
 		if last_modified <= modified_since:
 			raise NOT_MODIFIED()
 
-	@handler('request', priority=0.3102)
+	@handler('request', priority=0.6908)
 	@if_header_set('If-Unmodified-Since')
 	def unmodified_since(self, client):
 		if 'Last-Modified' not in client.response.headers:

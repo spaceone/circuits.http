@@ -29,7 +29,7 @@ class Logger(BaseComponent):
 		self.logger = logger
 		self.format = format
 
-	@handler('response', priority=-0.1)  # TODO: response_finished?
+	@handler('response.complete', priority=-0.1)
 	def response(self, client):
 		self.log(client)
 
