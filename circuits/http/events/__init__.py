@@ -11,6 +11,7 @@ class HTTPError(Event):
 
 		args: (client, httperror)
 	"""
+	name = 'httperror'
 	success = True
 	failure = True
 
