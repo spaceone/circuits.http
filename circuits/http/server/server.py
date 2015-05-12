@@ -81,9 +81,12 @@ class HTTP(BaseComponent):
 
 		try:
 			state = self._buffers[socket]
-		except KeyError:  # client disconnected before getting answer
+		except KeyError:  # client disconnected before receiving answer
 			self._premature_client_disconnect(client)
 			return
+
+		if client in state['responses']:
+			raise RuntimeError('Got multiple response events for client: %r' % (client,))
 
 		state['responses'].add(client)
 		pipeline = state['requests']
@@ -100,7 +103,7 @@ class HTTP(BaseComponent):
 
 		try:
 			state = self._buffers[socket]
-		except KeyError:  # client disconnected before getting answer
+		except KeyError:  # client disconnected before receiving answer
 			self._premature_client_disconnect(client)
 			return
 
@@ -159,8 +162,20 @@ class HTTP(BaseComponent):
 			if client_ in state['responses'] and client_ not in state['response_started']:
 				self.fire(_ResponseStart(client_))
 
+	@handler('httperror')
+	def _on_httperror(self, event, client, httperror):
+		try:
+			state = self._buffers[client.socket]
+		except KeyError:
+			self._premature_client_disconnect(client)
+			return
+
+		if client in state['responses']:
+			event.stop()
+			raise RuntimeError('Got httperror event after response event for client: %r. Ignoring it.' % (client,))
+
 	@handler("httperror_success")
-	def _on_httperror(self, client, httperror):
+	def _on_httperror_success(self, client, httperror):
 		"""default HTTP error handler"""
 		client, httperror = client.args
 		# TODO: move into httoop?
@@ -222,6 +237,13 @@ class HTTP(BaseComponent):
 		# FIXME: success_failure will fail, due to argument
 		client = evt.args[0]
 		socket = client.socket
+		try:
+			state = self._buffers[socket]
+		except KeyError:
+			self._premature_client_disconnect(client)
+			return
+		if client in state['responses']:
+			return
 		self.fire(write(socket, b'%s\r\n' % (Response(status=500),))) # TODO: self.default_internal_server_error
 		self.fire(close(socket))
 
