@@ -250,7 +250,7 @@ class HTTP(BaseComponent):
 		self.fire(write(socket, b'%s\r\n' % (Response(status=500),))) # TODO: self.default_internal_server_error
 		self.fire(close(socket))
 
-	@handler("error")
+	@handler("exception")
 	def _on_error(self, etype, evalue, traceback, handler=None, fevent=None):
 		if isinstance(fevent, read):
 			socket = fevent.args[0]

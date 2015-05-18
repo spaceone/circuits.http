@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from circuits import BaseComponent, handler
+from circuits.http.utils import httperror
 
 from httoop import BAD_REQUEST, UNSUPPORTED_MEDIA_TYPE, DecodeError
 
@@ -11,6 +12,7 @@ from httoop import BAD_REQUEST, UNSUPPORTED_MEDIA_TYPE, DecodeError
 class RequestContentType(BaseComponent):
 
 	@handler('request', priority=0.55)
+	@httperror
 	def decode_input_representation(self, client):
 
 		if client.method.safe and client.request.body:
