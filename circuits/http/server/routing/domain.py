@@ -7,7 +7,7 @@ from circuits import BaseComponent, handler
 from circuits.http.utils import httperror
 from circuits.http.server.resource import Domain
 
-from httoop import BAD_REQUEST, MOVED_PERMANENTLY
+from httoop import MOVED_PERMANENTLY
 from httoop.header import Host
 
 

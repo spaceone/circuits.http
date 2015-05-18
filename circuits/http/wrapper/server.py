@@ -17,9 +17,9 @@ class Server(object):
 	def protocol(self):
 		return (1, 1)
 
-	@property
-	def version(self):
-		return SERVER_VERSION
+#	@property
+#	def version(self):
+#		return SERVER_VERSION
 
 	@property
 	def scheme(self):

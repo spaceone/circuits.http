@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from circuits import BaseComponent, handler
-from circuits.http.events import routing, response
+from circuits.http.events import routing, response, request
 from circuits.http.utils import httperror
 
 from httoop import BAD_REQUEST

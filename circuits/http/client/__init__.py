@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from circuits.core import handler, BaseComponent, Event
+from circuits.core import handler, BaseComponent
 from circuits.net.sockets import TCPClient
 from circuits.net.events import close, connect, write
 
-from circuits.http.wrapper import Client
 from circuits.http.events import response as ResponseEvent
 
 from httoop import ClientStateMachine
@@ -31,7 +30,7 @@ class HTTPClient(BaseComponent):
 			socket = self._socket_map[(host, port, secure)]
 		except KeyError:
 			socket = TCPClient(channel='%s_%d' % (self.channel, len(self._buffers))).register(self)
-			state = self._buffers[socket] = {
+			self._buffers[socket] = {
 				'parser': ClientStateMachine(),
 				'socket': socket,
 				'requests': [],
