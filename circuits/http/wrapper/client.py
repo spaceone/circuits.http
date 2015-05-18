@@ -27,6 +27,8 @@ class Client(object):
 	done = False  # indicates that the response has been send to the socket
 	handled = False  # indicated that the request has been handled
 
+	events = None
+
 	def __init__(self, request, response, socket=None, server=None):
 		"""
 			:param request: the HTTP request
@@ -51,6 +53,11 @@ class Client(object):
 				self.socket.getpeername() or [self.socket.getsockname()[0], 0]
 			))
 			self.remote.resolve()  # TODO: resolve only when accessed?
+
+		self.events = type(b'events', (object,), {
+			b'request': None,
+			b'response': None
+		})()
 
 #	def url(self, *path, **query):
 #		# TODO: it could be nice to have a method to generate URL's

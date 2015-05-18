@@ -3,12 +3,16 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+from functools import wraps
+
 from circuits.http.events import HTTPError
+
 from httoop import HTTPStatusException
 
 
 def sets_header(header, ifmethod=None):
 	def _decorator(func):
+		@wraps(func)
 		def _decorated(self, client, *args, **kwargs):
 			if ifmethod and client.method not in ifmethod:
 				return
@@ -21,6 +25,7 @@ def sets_header(header, ifmethod=None):
 
 def if_header_set(header, ifmethod=None):
 	def _decorator(func):
+		@wraps(func)
 		def _decorated(self, client, *args, **kwargs):
 			if ifmethod and client.method not in ifmethod:
 				return
@@ -31,12 +36,16 @@ def if_header_set(header, ifmethod=None):
 
 
 def httperror(func):
+	@wraps(func)
 	def _decorated(self, event, client, *args, **kwargs):
 		try:
 			return func(self, client, *args, **kwargs)
 		except HTTPStatusException as httperror:
 			event.stop()
-			self.fire(HTTPError(client, httperror))
+			if client.events.request is not None:
+				client.events.request.stop()
+				client.events.request = None
+			self.fire(HTTPError(client, httperror), channels=[client.server.channel])
 	return _decorated
 
 

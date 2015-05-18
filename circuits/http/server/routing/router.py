@@ -16,7 +16,8 @@ class Router(BaseComponent):
 	def _on_request(self, client):
 		yield self.wait(self.fire(routing(client)))
 		channels = [c.channel for c in (client.domain, client.resource) if c is not None]
-		yield self.wait(self.fire(request(client), channels=channels))
+		client.events.request = self.fire(request(client), channels=channels)
+		yield self.wait(client.events.request)
 		self.fire(response(client))
 
 	@handler('routing', priority=0)
@@ -27,4 +28,3 @@ class Router(BaseComponent):
 			# alternative host links
 			UnknownHost = lambda: BAD_REQUEST('The requested Host is unknown.')
 			raise UnknownHost()
-
