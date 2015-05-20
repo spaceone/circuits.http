@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from types import GeneratorType
+from ssl import SSLError
 
 from circuits import BaseComponent, handler, Event
 from circuits.net.utils import is_ssl_handshake
@@ -251,7 +252,7 @@ class HTTP(BaseComponent):
 		self.fire(close(socket))
 
 	@handler("exception")
-	def _on_error(self, etype, evalue, traceback, handler=None, fevent=None):
+	def _on_exception(self, etype, evalue, traceback, handler=None, fevent=None):
 		if isinstance(fevent, read):
 			socket = fevent.args[0]
 			self.fire(close(socket))
@@ -289,3 +290,15 @@ class HTTP(BaseComponent):
 			httperror = INTERNAL_SERVER_ERROR('%s (%s)' % (etype.__name__, httperror))
 		httperror.traceback = traceback
 		self.fire(HTTPError(client, httperror))
+
+	@handler('error')
+	def _on_socket_error(self, socket, error):
+		if isinstance(error, SSLError):
+			if error.errno == 1 and getattr(error, 'reason', None) == 'HTTP_REQUEST' or error.strerror.endswith(':http request'):
+				self._plain_http_trough_ssl(socket)
+			self.fire(close(socket))
+
+	def _plain_http_trough_ssl(self, socket):
+		self.fire(write(socket, """Your browser sent a request that this server could not understand.
+Reason: You're speaking plain HTTP to an SSL-enabled server port.
+Instead use the HTTPS scheme to access this URL, please: https://%s"""))  # TODO: add URI by parsing the data which were written into the socket
