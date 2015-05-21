@@ -69,4 +69,4 @@ class Logger(BaseComponent):
 			self.file.flush()
 
 	def formattime(self):
-		return datetime.datetime.now().strftime('[%d/%b/%Y:%H:%M:%S]')
+		return datetime.now().strftime('[%d/%b/%Y:%H:%M:%S]')
