@@ -120,7 +120,7 @@ class HTTP(BaseComponent):
 		bheaders = bytes(response.headers)
 
 		yield self.call(write(socket, b'%s%s' % (bresponse, bheaders)))
-		yield self.wait(self.fire(_ResponseBody(client)).event)
+		yield self.call(_ResponseBody(client))
 
 	@handler("response.body")
 	def _on_response_body(self, client):
@@ -136,10 +136,10 @@ class HTTP(BaseComponent):
 			#if response.close:
 			#	self.fire(close(socket))
 			client.done = True
-			yield self.fire(_ResponseComplete(client))
+			self.fire(_ResponseComplete(client))
 		else:
-			self.fire(write(socket, data))
-			yield self.fire(_ResponseBody(client))
+			yield self.call(write(socket, data))
+			self.fire(_ResponseBody(client))
 
 	@handler('response.complete')
 	def _on_response_complete(self, client):

@@ -49,8 +49,8 @@ class HTTPClient(BaseComponent):
 			host = client.request.uri.host
 			port = client.request.uri.port
 			secure = client.request.uri.scheme == u'https'
-			event = yield self.call(connect(host, port, secure))
-			client.socket = event.value
+			result = yield self.call(connect(host, port, secure))
+			client.socket = result.value
 			yield self.wait("connected", client.socket.channel)
 
 		try:

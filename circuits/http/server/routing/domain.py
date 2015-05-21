@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 
 from circuits import BaseComponent, handler
 from circuits.http.utils import httperror
+from circuits.http.events import routing
 from circuits.http.server.resource import Domain
 
 from httoop import MOVED_PERMANENTLY
@@ -58,6 +59,11 @@ class DomainRouter(BaseComponent):
 		path = domain.url(client, *client.request.path_segments)
 		path.query = {}  # TODO: check if we MUST leave out querystring
 		raise MOVED_PERMANENTLY(path)
+
+	@handler('routing', priority=1.5)
+	def _route_into_domain(self, event, client):
+		if client.domain is not None:
+			yield self.call(routing(client), client.domain.channel)
 
 	@handler('registered', channel='*')
 	def _add_domain(self, domain, parent):

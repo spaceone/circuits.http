@@ -14,13 +14,17 @@ class Router(BaseComponent):
 
 	@handler('request')
 	def _on_request(self, client):
-		yield self.wait(self.fire(routing(client)))
+		event = routing(client)
+		self.fire(event)
+		yield #self.wait(event)  # FIXME: the following request event is fired twice then (handlers are executed twice)
+
 		channels = [c.channel for c in (client.domain, client.resource) if c is not None]
-		client.events.request = self.fire(request(client), channels=channels)
-		yield self.wait(client.events.request)
+		client.events.request = self.fire(request(client), *channels).event
+		yield #self.wait(client.events.request)  # FIXME: circuits does no further event processing :/
+
 		self.fire(response(client))
 
-	@handler('routing', priority=0)
+	@handler('routing', priority=-0.1)
 	@httperror
 	def _on_routing(self, client):
 		if client.domain is None:
