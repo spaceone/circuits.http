@@ -5,3 +5,4 @@ from __future__ import unicode_literals
 
 from circuits.http.server.routing.router import Router
 from circuits.http.server.routing.domain import DomainRouter
+from circuits.http.server.routing.utils import regexpath
