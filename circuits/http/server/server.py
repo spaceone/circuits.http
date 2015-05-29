@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from types import GeneratorType
 from ssl import SSLError
+from time import time
 
 from circuits import BaseComponent, handler, Event
 from circuits.net.utils import is_ssl_handshake
@@ -28,6 +29,8 @@ class HTTP(BaseComponent):
 	"""
 
 	channel = 'http'
+
+	connection_idle_timeout = 30.0
 
 	def __init__(self, channel=channel):
 		super(HTTP, self).__init__(channel=channel)
@@ -52,6 +55,7 @@ class HTTP(BaseComponent):
 				'requests': [],
 				'responses': set(),
 				'response_started': set(),
+				'timeout': None,
 				'composed': {}
 			}
 
@@ -72,6 +76,36 @@ class HTTP(BaseComponent):
 		client = Client(request, response, socket, server)
 		self._buffers[socket]['requests'].append(client)
 		return client
+
+	@handler('read', priority=-0.1)
+	def _timeout(self, socket, data):
+		try:
+			from circuits import sleep
+		except ImportError:
+			return  # wrong circuits version
+		try:
+			state = self._buffers[socket]
+		except KeyError:
+			return  # disconnected
+
+		timeout = state['timeout']
+		if timeout is not None:
+			print 3.5
+			timeout.abort = True
+			timeout.expiry = time()
+
+		timeout = sleep(self.connection_idle_timeout)
+		timeout.abort = False
+		state['timeout'] = timeout
+
+		yield timeout
+
+		if timeout.abort:
+			return
+		if all(client.done for client in state['requests']):
+			self.fire(close(socket))
+		#else:
+			# TODO: implement close after last response
 
 	@handler("response")
 	def _on_response(self, client):
