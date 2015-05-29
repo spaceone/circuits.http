@@ -45,7 +45,7 @@ def httperror(func):
 			if client.events.request is not None:
 				client.events.request.stop()
 				client.events.request = None
-			self.fire(HTTPError(client, httperror), channels=[client.server.channel])
+			self.fire(HTTPError(client, httperror), client.server.channel)
 	return _decorated
 
 

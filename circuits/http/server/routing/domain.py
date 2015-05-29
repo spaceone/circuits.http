@@ -56,7 +56,7 @@ class DomainRouter(BaseComponent):
 				return self.redirect_alias(domain, client)
 
 	def redirect_alias(self, domain, client):
-		path = domain.url(client, *client.request.path_segments)
+		path = domain.url(client, *client.request.uri.path_segments)
 		path.query = {}  # TODO: check if we MUST leave out querystring
 		raise MOVED_PERMANENTLY(path)
 
