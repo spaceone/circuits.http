@@ -207,7 +207,7 @@ class HTTP(BaseComponent):
 
 		if client in state['responses']:
 			event.stop()
-			raise RuntimeError('Got httperror event after response event for client: %r. Ignoring it.' % (client,))
+			raise RuntimeError('Got httperror event after response event. Client: %r, HTTPError: %r. Ignoring it.' % (client, httperror))
 
 	@handler("httperror_success")
 	def _on_httperror_success(self, client, httperror):

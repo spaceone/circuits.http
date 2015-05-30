@@ -25,7 +25,7 @@ class HTTPClient(BaseComponent):
 #			self.fire(close(), self.socket)
 
 	@handler('connect', priority=1.0)
-	def _on_connect(self, event, host=None, port=None, secure=None):
+	def _on_connect(self, host=None, port=None, secure=None):
 		try:
 			socket = self._socket_map[(host, port, secure)]
 		except KeyError:

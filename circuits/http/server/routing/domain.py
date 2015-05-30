@@ -61,7 +61,7 @@ class DomainRouter(BaseComponent):
 		raise MOVED_PERMANENTLY(path)
 
 	@handler('routing', priority=1.5)
-	def _route_into_domain(self, event, client):
+	def _route_into_domain(self, client):
 		if client.domain is not None:
 			yield self.call(routing(client), client.domain.channel)
 

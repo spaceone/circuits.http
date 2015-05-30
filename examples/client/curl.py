@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 
 from httoop import Request
 
-from circuits import Debugger, handler, BaseComponent
+from circuits import handler, BaseComponent
 from circuits.http.client import HTTPClient
 from circuits.http.events import request as RequestEvent
 from circuits.http.wrapper import Client
@@ -18,7 +18,6 @@ class Curl(HTTPClient):
 	def __init__(self):
 		self.parse_arguments()
 		a = self.arguments
-		p = self.parser
 
 		if a.manual:
 			os.execve('/usr/bin/man', ['5', 'curl'], os.environ)
