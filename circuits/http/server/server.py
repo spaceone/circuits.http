@@ -226,6 +226,8 @@ class HTTP(BaseComponent):
 		channels = [c.channel for c in (self, client.server, client.domain, client.resource) if c is not None]
 		yield self.call(Event.create(b'httperror_%d' % (httperror.status,)), channels=channels)
 
+		client.response.body.encode()
+
 		self.fire(ResponseEvent(client))
 
 	@handler("request_failure")
