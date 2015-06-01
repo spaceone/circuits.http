@@ -8,7 +8,7 @@ from types import GeneratorType
 from ssl import SSLError
 from time import time
 
-from circuits import BaseComponent, handler, Event
+from circuits import BaseComponent, handler, reprhandler, Event
 from circuits.net.utils import is_ssl_handshake
 from circuits.net.events import close, write, read
 from circuits.http.wrapper import Client, Server
@@ -77,8 +77,12 @@ class HTTP(BaseComponent):
 		self._buffers[socket]['requests'].append(client)
 		return client
 
-	@handler('read', priority=-0.1)
-	def _timeout(self, socket, data):
+	@handler('read', 'connect', priority=-0.1)
+	def _timeout(self, socket, *data):
+		self.fire(Event.create(b'timeout.check', socket))
+
+	@handler('timeout.check')
+	def _check_timeout(self, socket):
 		try:
 			from circuits import sleep
 		except ImportError:
@@ -86,11 +90,11 @@ class HTTP(BaseComponent):
 		try:
 			state = self._buffers[socket]
 		except KeyError:
+			# FIXME: does not exists yet on "connect"
 			return  # disconnected
 
 		timeout = state['timeout']
 		if timeout is not None:
-			print 3.5
 			timeout.abort = True
 			timeout.expiry = time()
 
@@ -111,7 +115,6 @@ class HTTP(BaseComponent):
 	def _on_response(self, client):
 		"""Send respond message to client's socket"""
 
-		request, response = client
 		socket = client.socket
 
 		try:
@@ -160,7 +163,7 @@ class HTTP(BaseComponent):
 	def _on_response_body(self, client):
 		"""stream the response output"""
 
-		request, response = client
+		response = client.response
 		socket = client.socket
 
 		try:
@@ -288,7 +291,8 @@ class HTTP(BaseComponent):
 		self.fire(close(socket))
 
 	@handler("exception")
-	def _on_exception(self, etype, evalue, traceback, handler=None, fevent=None):
+	def _on_exception(self, *args, **kwargs):
+		fevent = kwargs['fevent']
 		if isinstance(fevent, read):
 			socket = fevent.args[0]
 			self.fire(close(socket))
@@ -299,8 +303,7 @@ class HTTP(BaseComponent):
 			self.fire(close(socket))
 		else:
 			# TODO: log
-			# print '## handler=', repr(handler), '## fevent=', repr(fevent)
-			pass
+			print('Exception in %s\nTraceback: %s' % (reprhandler(kwargs['handler']), args[2]))
 
 	@handler("disconnect", "close")
 	def _on_disconnect_or_close(self, socket=None):

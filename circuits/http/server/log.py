@@ -16,18 +16,18 @@ class Logger(BaseComponent):
 
 	format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
-	def __init__(self, file=None, logger=None, format=format, **kwargs):
+	def __init__(self, logfile=None, logger=None, logformat=format, **kwargs):
 		super(Logger, self).__init__(**kwargs)
 
-		if isinstance(file, string_types):
-			self.file = open(os.path.abspath(os.path.expanduser(file)), 'a')
-		elif isinstance(file, IOBase) or hasattr(file, 'write'):
-			self.file = file
+		if isinstance(logfile, string_types):
+			self.file = open(os.path.abspath(os.path.expanduser(logfile)), 'a')
+		elif isinstance(logfile, IOBase) or hasattr(logfile, 'write'):
+			self.file = logfile
 		else:
 			self.file = sys.stdout
 
 		self.logger = logger
-		self.format = format
+		self.format = logformat
 
 	@handler('response.complete', priority=-0.1)
 	def response(self, client):

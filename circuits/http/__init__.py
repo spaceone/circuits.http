@@ -8,3 +8,5 @@ try:
 except ImportError as exc:
 	print('Missing httoop module. https://github.com/spaceone/httoop.\n')
 	raise
+else:
+	del httoop

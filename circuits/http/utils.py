@@ -40,12 +40,12 @@ def httperror(func):
 	def _decorated(self, event, client, *args, **kwargs):
 		try:
 			return func(self, client, *args, **kwargs)
-		except HTTPStatusException as httperror:
+		except HTTPStatusException as httperror_:
 			event.stop()
 			if client.events.request is not None:
 				client.events.request.stop()
 				client.events.request = None
-			self.fire(HTTPError(client, httperror), client.server.channel)
+			self.fire(HTTPError(client, httperror_), client.server.channel)
 	return _decorated
 
 
