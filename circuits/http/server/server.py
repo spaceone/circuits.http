@@ -4,7 +4,6 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from types import GeneratorType
 from ssl import SSLError
 from time import time
 
@@ -319,7 +318,7 @@ class HTTP(BaseComponent):
 	def _premature_client_disconnect(self, client):
 		request, response = client
 		# security: make sure that the generator is executed
-		if isinstance(response.body.content, GeneratorType) and not request.method.safe:
+		if response.body.generator and not request.method.safe:
 			bytes(response.body)
 		response.body.close()
 
