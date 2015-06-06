@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from ssl import SSLError
 from time import time
+from traceback import format_tb
 
 from circuits import BaseComponent, handler, reprhandler, Event
 from circuits.net.utils import is_ssl_handshake
@@ -302,7 +303,8 @@ class HTTP(BaseComponent):
 			self.fire(close(socket))
 		else:
 			# TODO: log
-			print('Exception in %s\nTraceback: %s' % (reprhandler(kwargs['handler']), args[2]))
+			handler = reprhandler(kwargs['handler']) if kwargs['handler'] else 'Unknown'
+			print('Exception in %s\nTraceback: %s' % (handler, ''.join(args[2])))
 
 	@handler("disconnect", "close")
 	def _on_disconnect_or_close(self, socket=None):
@@ -326,7 +328,7 @@ class HTTP(BaseComponent):
 		etype, httperror, traceback = error
 		if not isinstance(httperror, HTTPStatusException):
 			httperror = INTERNAL_SERVER_ERROR('%s (%s)' % (etype.__name__, httperror))
-		httperror.traceback = traceback
+		httperror.traceback = format_tb(traceback)
 		self.fire(HTTPError(client, httperror))
 
 	@handler('error')

@@ -14,11 +14,8 @@ class Router(BaseComponent):
 
 	@handler('request')
 	def _on_request(self, client):
-		event = routing(client)
-		# FIXME: https://github.com/circuits/circuits/issues/60
-		#self.fire(event)
-		#yield #self.wait(event)  # FIXME: the following request event is fired twice then (handlers are executed twice)
-		yield self.call(event)
+		event = self.fire(routing(client)).event
+		yield self.wait(event)
 		if event.stopped:
 			return
 
@@ -26,10 +23,8 @@ class Router(BaseComponent):
 		if not channels:
 			return
 
-		event = self.fire(request(client), *channels).event
-		client.events.request = event  # make sure error handlers can stop the event
-		# FIXME: https://github.com/circuits/circuits/issues/60
-		yield #self.wait(client.events.request)  # FIXME: circuits does no further event processing :/
+		event = client.events.request = self.fire(request(client), *channels).event
+		yield self.wait(event, *channels)
 
 		if event.stopped:
 			return
@@ -41,6 +36,7 @@ class Router(BaseComponent):
 		if client.domain is None:
 			# TODO: create a exception for this, so that implementors can give
 			# alternative host links
+			# TODO: Implement ExposeDomains component
 			UnknownHost = lambda: BAD_REQUEST('The requested Host is unknown.')
 			raise UnknownHost()
 

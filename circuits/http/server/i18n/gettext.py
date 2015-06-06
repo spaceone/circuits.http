@@ -15,7 +15,7 @@ class GettextResource(object):
 	_fallback = True
 	RE_LANG = re.compile('^([a-z][a-z])-([a-z][a-z])$')
 
-	def language(self, client):
+	def content_language(self, client):
 		localedir = client.domain.localedir
 		textdomain = client.resource.textdomain(client)
 		languages = client.request.headers.values('Accept-Language')
