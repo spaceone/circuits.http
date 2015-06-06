@@ -156,8 +156,8 @@ class HTTP(BaseComponent):
 		bresponse = bytes(response)
 		bheaders = bytes(response.headers)
 
-		yield self.call(write(socket, b'%s%s' % (bresponse, bheaders)))
-		yield self.call(_ResponseBody(client))
+		self.fire(write(socket, b'%s%s' % (bresponse, bheaders)))
+		self.fire(_ResponseBody(client))
 
 	@handler("response.body")
 	def _on_response_body(self, client):
@@ -175,7 +175,7 @@ class HTTP(BaseComponent):
 			client.done = True
 			self.fire(_ResponseComplete(client))
 		else:
-			yield self.call(write(socket, data))
+			self.fire(write(socket, data))
 			self.fire(_ResponseBody(client))
 
 	@handler('response.complete')
@@ -227,7 +227,9 @@ class HTTP(BaseComponent):
 		client.response.body = httperror.body
 
 		channels = [c.channel for c in (self, client.server, client.domain, client.resource) if c is not None]
-		yield self.call(Event.create(b'httperror_%d' % (httperror.status,)), channels=channels)
+		event = Event.create(b'httperror_%d' % (httperror.status,))
+		self.fire(event, *channels)
+		yield self.wait(event)
 
 		client.response.body.encode()
 

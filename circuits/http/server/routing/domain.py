@@ -63,7 +63,7 @@ class DomainRouter(BaseComponent):
 	@handler('routing', priority=1.5)
 	def _route_into_domain(self, client):
 		if client.domain is not None:
-			yield self.call(routing(client), client.domain.channel)
+			self.fire(routing(client), client.domain.channel)
 
 	@handler('registered', channel='*')
 	def _add_domain(self, domain, parent):
