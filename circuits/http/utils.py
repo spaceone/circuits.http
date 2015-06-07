@@ -4,7 +4,9 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from functools import wraps
+from inspect import getargspec
 
+from circuits import handler as event_handler
 from circuits.http.events import HTTPError
 
 from httoop import HTTPStatusException
@@ -36,10 +38,17 @@ def if_header_set(header, ifmethod=None):
 
 
 def httperror(func):
+	args = getargspec(func)[0]
+	if args and args[0] == "self":
+		del args[0]
+	with_event = getattr(func, "event", bool(args and args[0] == "event"))
 	@wraps(func)
 	def _decorated(self, event, client, *args, **kwargs):
 		try:
-			return func(self, client, *args, **kwargs)
+			args = tuple([client] + list(args))
+			if with_event:
+				args = tuple([event] + list(args))
+			return func(self, *args, **kwargs)
 		except HTTPStatusException as httperror_:
 			event.stop()
 			if client.events.request is not None:
@@ -47,6 +56,12 @@ def httperror(func):
 				client.events.request = None
 			self.fire(HTTPError(client, httperror_), client.server.channel)
 	return _decorated
+
+
+def httphandler(*names, **kwargs):
+	def _decorator(func):
+		return event_handler(*names, **kwargs)(httperror(func))
+	return _decorator
 
 
 def allof(*conditions):

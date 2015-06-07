@@ -3,16 +3,16 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from circuits import BaseComponent, handler
+from circuits import BaseComponent
 from circuits.net.events import write
-from circuits.http.utils import if_header_set
+from circuits.http.utils import if_header_set, httphandler
 
 from httoop import EXPECTATION_FAILED, CONTINUE, Response
 
 
 class Expect(BaseComponent):
 
-	@handler('request', priority=.9)
+	@httphandler('request', priority=.9)
 	@if_header_set('Expect', ifmethod=('POST', 'PUT'))
 	def expectatable(self, client):
 		if hasattr(client.resource, 'expect'):

@@ -3,21 +3,21 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from circuits import BaseComponent, handler
-from circuits.http.utils import sets_header, if_header_set
+from circuits import BaseComponent
+from circuits.http.utils import sets_header, if_header_set, httphandler
 
 from httoop import PRECONDITION_FAILED, NOT_MODIFIED
 
 
 class ETag(BaseComponent):
 
-	@handler('request', priority=0.7)
+	@httphandler('request', priority=0.7)
 	@sets_header('Etag')
 	def _etag_header(self, client):
 		if hasattr(client.resource, 'etag'):
 			return client.resource.etag(client)
 
-	@handler('request', priority=0.69)
+	@httphandler('request', priority=0.69)
 	@if_header_set('If-None-Match')
 	def _none_match(self, client):
 		if 'Etag' in client.response.headers:
@@ -33,7 +33,7 @@ class ETag(BaseComponent):
 			# FIXME: what should we do here?
 			pass
 
-	@handler('request', priority=0.69)
+	@httphandler('request', priority=0.69)
 	@if_header_set('If-Match')
 	def _match(self, client):
 		# Conditional HTTP: ETag

@@ -3,19 +3,18 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from circuits import BaseComponent, handler
-from circuits.http.utils import httperror
+from circuits import BaseComponent
+from circuits.http.utils import httphandler
 
 from httoop import BAD_REQUEST, UNSUPPORTED_MEDIA_TYPE, DecodeError
 
 
 class RequestContentType(BaseComponent):
 
-	@handler('request', priority=0.55)
-	@httperror
+	@httphandler('request', priority=0.55)
 	def decode_input_representation(self, client):
 
-		if client.method.safe and client.request.body:
+		if client.request.method.safe and client.request.body:
 			# HTTP allows a GET / HEAD / ... request to have a request body
 			# but it doesn't make sense and potencially opens security issues, so deny it here
 			raise BAD_REQUEST('The request method is considered safe and cannot contain a request body.')

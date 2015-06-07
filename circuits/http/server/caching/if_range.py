@@ -3,15 +3,15 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from circuits import BaseComponent, handler
-from circuits.http.utils import if_header_set
+from circuits import BaseComponent
+from circuits.http.utils import if_header_set, httphandler
 
 from httoop import EXPECTATION_FAILED
 
 
 class IfRange(BaseComponent):
 
-	@handler('request', priority=0.69)
+	@httphandler('request', priority=0.69)
 	@if_header_set(('If-Range', 'Range'))
 	def if_range(self, client):
 		if_range = client.request.headers.get('If-Range')

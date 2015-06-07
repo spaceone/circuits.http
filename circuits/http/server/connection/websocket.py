@@ -8,7 +8,7 @@ import base64
 
 from circuits import BaseComponent, handler
 from circuits.net.events import connect, disconnect
-from circuits.http.utils import if_header_set
+from circuits.http.utils import if_header_set, httphandler
 from circuits.protocols.websocket import WebSocketCodec
 
 from httoop import BAD_REQUEST
@@ -21,7 +21,7 @@ class Websocket(BaseComponent):
 		self._wschannel = wschannel or '%s-websocket' % (self.channel,)
 		self._codecs = {}
 
-	@handler('request', priority=0.8)
+	@httphandler('request', priority=0.8)
 	@if_header_set('Upgrade')
 	def _on_request(self, event, client):
 

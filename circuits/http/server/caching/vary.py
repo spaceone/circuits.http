@@ -3,13 +3,13 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from circuits import BaseComponent, handler
-from circuits.http.utils import sets_header
+from circuits import BaseComponent
+from circuits.http.utils import sets_header, httphandler
 
 
 class Vary(BaseComponent):
 
-	@handler('request', priority=0.40)
+	@httphandler('request', priority=0.40)
 	@sets_header('Vary', ifmethod=('GET', 'HEAD', 'OPTIONS'))
 	def _vary_header(self, client):
 		if hasattr(client.resource, 'vary'):
