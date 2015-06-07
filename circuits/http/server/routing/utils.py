@@ -74,4 +74,8 @@ def regexpath(path):
 	elif current:
 		append(current)
 
-	return re.compile('^%s$' % ''.join(regparts))
+	try:
+		route = ''.join(regparts)
+		return re.compile('^%s$' % route)
+	except re.error as exc:
+		raise ValueError('Invalid route: %s; %s' % (route, exc))
