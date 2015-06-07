@@ -3,8 +3,11 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from circuits import BaseComponent, handler
-from circuits.http.utils import httperror
+import inspect
+
+from circuits import BaseComponent
+from circuits.http.utils import httphandler
+from circuits.http.server.resource.method import Method
 from circuits.http.server.caching import CacheControl, ETag, Expires, IfRange, LastModified, Vary
 from circuits.http.server.content import RequestContentType
 
@@ -24,8 +27,8 @@ class Resource(BaseComponent):
 		RequestContentType
 	]
 
-	def __init__(self, channel):
-		super(Resource, self).__init__(channel=channel)
+	def __init__(self, channel=None):
+		super(Resource, self).__init__(channel=channel or self.channel)
 		self.path = None
 		self.methods = dict()
 		self.supported_methods = self.supported_methods
@@ -35,14 +38,32 @@ class Resource(BaseComponent):
 		self.default_features = self.default_features[:]
 		self.acceptable_languages = set()
 		self.acceptable = set()
+		self.register_routing()
 		self.register_features()
+		self.register_methods()
+
+	def register_routing(self):
+		pass
 
 	def register_features(self):
 		for FeatureType in self.default_features:
 			FeatureType(channel=self.channel).register(self)
 
-	@handler('request', priority=0.5)
-	@httperror
+	def register_methods(self):
+		M = type(b'Method', (Method, BaseComponent), {})
+		for name, member in inspect.getmembers(self.__class__, Method.is_method):
+			member.__class__ = M
+			BaseComponent.__init__(member, channel=self.channel)
+			member.register(self)
+			self.methods[member.http_method] = member
+
+		if 'GET' not in self.methods:
+			raise RuntimeError('A HTTP resource must support a GET method.')
+
+		self.methods.setdefault('HEAD', self.methods['GET'])
+		self.allowed_methods = tuple(self.methods.keys())
+
+	@httphandler('request', priority=0.5)
 	def _check_method_exists(self, client):
 		if client.method is not None:
 			return
@@ -58,7 +79,7 @@ class Resource(BaseComponent):
 	def last_modified(self, client):
 		pass
 
-	def language(self, client):
+	def content_language(self, client):
 		pass
 
 	def cache_control(self, client):
@@ -71,6 +92,9 @@ class Resource(BaseComponent):
 		pass
 
 	def location(self, client):
+		pass
+
+	def content_location(self, client):
 		pass
 
 	def content_type(self, client):
