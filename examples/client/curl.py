@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 
 from httoop import Request
 
-from circuits import handler, BaseComponent
+from circuits import handler
 from circuits.http.client import HTTPClient
 from circuits.http.events import request as RequestEvent
 from circuits.http.wrapper import Client

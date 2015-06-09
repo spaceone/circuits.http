@@ -4,27 +4,19 @@ import re
 
 
 def regexpath(path):
+	try:
+		route = ''.join(tokenize(path))
+		return re.compile('^%s$' % route)
+	except re.error as exc:
+		raise ValueError('Invalid route: %s; %s' % (route, exc))
+
+
+def tokenize(path):
 	# special chars to indicate a natural split in the URL
 	done_chars = ('/', ',', ';', '.', '#')
 	reqs = {}
 
 	regparts = []
-	defaults = {
-		':': '[^/]+?',
-		'.': '[^/.]+?',
-		'*': '.+?'
-	}
-	def append(part):
-		if isinstance(part, dict):
-			var = part['name']
-			partmatch = reqs.get(var) or defaults[part['type']]
-			regpart = '(?P<%s>%s)' % (var, partmatch)
-			if part['type'] == '.':
-				regparts.append('(?:\.%s)??' % regpart)
-			else:
-				regparts.append(regpart)
-		else:
-			regparts.append(re.escape(part))
 
 	collecting = False
 	current = ''
@@ -40,7 +32,7 @@ def regexpath(path):
 				done_on = '}'
 				just_started = False
 			if current:
-				append(current)
+				regparts.append(_append(current))
 				current = ''
 		elif collecting and just_started:
 			just_started = False
@@ -63,19 +55,29 @@ def regexpath(path):
 				if len(opts) > 1:
 					current = opts[0]
 					reqs[current] = opts[1]
-			append(dict(type=var_type, name=current))
+			regparts.append(_append(dict(type=var_type, name=current, var=reqs.get(current))))
 			if char in done_chars:
-				append(char)
+				regparts.append(_append(char))
 			done_on = var_type = current = ''
 		else:
 			current += char
 	if collecting:
-		append(dict(type=var_type, name=current))
+		regparts.append(_append(dict(type=var_type, name=current, var=reqs.get(current))))
 	elif current:
-		append(current)
+		regparts.append(_append(current))
+	return regparts
+tokenize.defaults = {
+	':': '[^/]+?',
+	'.': '[^/.]+?',
+	'*': '.+?'
+}
 
-	try:
-		route = ''.join(regparts)
-		return re.compile('^%s$' % route)
-	except re.error as exc:
-		raise ValueError('Invalid route: %s; %s' % (route, exc))
+
+def _append(part):
+	if isinstance(part, dict):
+		partmatch = part['var'] or tokenize.defaults[part['type']]
+		regpart = '(?P<%s>%s)' % (part['name'], partmatch)
+		if part['type'] == '.':
+			return '(?:\.%s)??' % (regpart,)
+		return regpart
+	return re.escape(part)

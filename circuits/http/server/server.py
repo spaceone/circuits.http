@@ -78,8 +78,8 @@ class HTTP(BaseComponent):
 		return client
 
 	@handler('read', 'connect', priority=-0.1)
-	def _timeout(self, socket, *data):
-		self.fire(Event.create(b'timeout.check', socket))
+	def _timeout(self, *args):
+		self.fire(Event.create(b'timeout.check', args[0]))
 
 	@handler('timeout.check')
 	def _check_timeout(self, socket):
@@ -291,6 +291,7 @@ class HTTP(BaseComponent):
 			return
 		self.fire(write(socket, b'%s\r\n' % (Response(status=500),))) # TODO: self.default_internal_server_error
 		self.fire(close(socket))
+		print('Exception in httperror_failure: %s' % (error,))
 
 	@handler("exception")
 	def _on_exception(self, *args, **kwargs):

@@ -50,9 +50,8 @@ class Resource(BaseComponent):
 			FeatureType(channel=self.channel).register(self)
 
 	def register_methods(self):
-		M = type(b'Method', (Method, BaseComponent), {})
 		for name, member in inspect.getmembers(self.__class__, Method.is_method):
-			member.__class__ = M
+			member.__class__ = type(b'%sMethod' % (name,), (Method, BaseComponent), {})
 			BaseComponent.__init__(member, channel=self.channel)
 			member.register(self)
 			self.methods[member.http_method] = member
