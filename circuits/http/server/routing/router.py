@@ -5,17 +5,17 @@ from __future__ import unicode_literals
 
 from circuits import BaseComponent, handler
 from circuits.http.events import routing, response, request
-from circuits.http.utils import httperror
+from circuits.http.utils import httphandler
 
 from httoop import BAD_REQUEST, NOT_FOUND, FORBIDDEN
 
 
 class Router(BaseComponent):
 
-	@handler('request')
+	@httphandler('request')
 	def _on_request(self, client):
-		event = self.fire(routing(client)).event
-		yield self.wait(event)
+		event = self.fire(routing(client), '*').event  # TODO: separate domain/resource routing to prevent '*'
+		yield self.wait(event, event.channels)
 		if event.stopped:
 			return
 
@@ -30,8 +30,7 @@ class Router(BaseComponent):
 			return
 		self.fire(response(client))
 
-	@handler('routing', priority=-0.11)
-	@httperror
+	@httphandler('routing', priority=-0.11)
 	def _on_domain_routing(self, client):
 		if client.domain is None:
 			# TODO: create a exception for this, so that implementors can give
@@ -40,8 +39,7 @@ class Router(BaseComponent):
 			UnknownHost = lambda: BAD_REQUEST('The requested Host is unknown.')
 			raise UnknownHost()
 
-	@handler('routing', priority=-0.12)
-	@httperror
+	@httphandler('routing', priority=-0.12)
 	def _on_resource_routing(self, client):
 		if client.resource is None:
 			if client.request.method in ('PUT', 'POST'):

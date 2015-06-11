@@ -4,7 +4,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from circuits import BaseComponent, handler
-from circuits.http.utils import httperror
+from circuits.http.utils import httphandler
 from circuits.http.events import routing
 from circuits.http.server.resource import Domain
 
@@ -20,20 +20,18 @@ class DomainRouter(BaseComponent):
 		super(DomainRouter, self).__init__(channel=channel)
 		self.domains = set()
 
-	@handler('routing', priority=1.9)
+	@httphandler('routing', priority=1.9)
 	def _http_one_zero(self, client):
 		# HTTP 1.0 does not contain Host-header
 		if client.request.protocol <= (1, 0):
 			client.request.header['Host'] = client.local.host
 
-	@handler('routing', priority=1.8)
-	@httperror
+	@httphandler('routing', priority=1.8)
 	def _route_host(self, client):
 		host = client.request.headers.element('Host')
 		client.domain = self._get_domain(host, client)
 
-	@handler('routing', priority=1.7)
-	@httperror
+	@httphandler('routing', priority=1.7)
 	def _route_forwarded_host(self, client):
 		if client.domain is not None or not self.use_x_forwarded_host:
 			return
@@ -60,7 +58,7 @@ class DomainRouter(BaseComponent):
 		path.query = {}  # TODO: check if we MUST leave out querystring
 		raise MOVED_PERMANENTLY(path)
 
-	@handler('routing', priority=1.5)
+	@httphandler('routing', priority=1.5)
 	def _route_into_domain(self, client):
 		if client.domain is not None:
 			self.fire(routing(client), client.domain.channel)
