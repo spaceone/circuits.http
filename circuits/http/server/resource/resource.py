@@ -9,7 +9,7 @@ from circuits import BaseComponent
 from circuits.http.utils import httphandler
 from circuits.http.server.resource.method import Method
 from circuits.http.server.caching import CacheControl, ETag, Expires, IfRange, LastModified, Vary
-from circuits.http.server.content import RequestContentType
+from circuits.http.server.content import RequestContentType, ContentType
 
 from httoop import METHOD_NOT_ALLOWED, NOT_IMPLEMENTED
 
@@ -24,7 +24,7 @@ class Resource(BaseComponent):
 
 	default_features = [
 		CacheControl, ETag, Expires, IfRange, LastModified, Vary,
-		RequestContentType
+		RequestContentType, ContentType
 	]
 
 	def __init__(self, channel=None):
@@ -51,9 +51,7 @@ class Resource(BaseComponent):
 
 	def register_methods(self):
 		for name, member in inspect.getmembers(self.__class__, Method.is_method):
-			member.__class__ = type(b'%sMethod' % (name,), (Method, BaseComponent), {})
-			BaseComponent.__init__(member, channel=self.channel)
-			member.register(self)
+			member.resource = self
 			self.methods[member.http_method] = member
 
 		if 'GET' not in self.methods:
@@ -62,7 +60,11 @@ class Resource(BaseComponent):
 		self.methods.setdefault('HEAD', self.methods['GET'])
 		self.allowed_methods = tuple(self.methods.keys())
 
-	@httphandler('request', priority=0.5)
+	@httphandler('request', priority=1.0)
+	def _pre_request(self, client):
+		client.method = self.methods.get(client.request.method)
+
+	@httphandler('request', priority=0.6)
 	def _check_method_exists(self, client):
 		if client.method is not None:
 			return
@@ -71,6 +73,10 @@ class Resource(BaseComponent):
 		if client.request.method in self.supported_methods:
 			raise METHOD_NOT_ALLOWED(allow, 'The specified method is invalid for this resource. Allowed methods are %s' % allow)
 		raise NOT_IMPLEMENTED('The requested method is not implemented', headers=dict(Allow=allow))
+
+	@httphandler('request', priority=0.5)
+	def _execute_method(self, client):
+		client.data = client.method(client.resource, client)
 
 	def etag(self, client):
 		pass
@@ -97,4 +103,4 @@ class Resource(BaseComponent):
 		pass
 
 	def content_type(self, client):
-		pass
+		return client.method.content_type_negotiation(client)

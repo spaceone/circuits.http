@@ -226,7 +226,7 @@ class HTTP(BaseComponent):
 		# set HTTP Body
 		client.response.body = httperror.body
 
-		channels = [c.channel for c in (self, client.server, client.domain, client.resource) if c is not None]
+		channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
 		event = Event.create(b'httperror_%d' % (httperror.status,))
 		self.fire(event, *channels)
 		yield self.wait(event)

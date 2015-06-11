@@ -9,7 +9,7 @@ from circuits.http.utils import sets_header, httphandler
 
 class ContentType(BaseComponent):
 
-	@httphandler('request', priority=0.4)
+	@httphandler('request', priority=0.59)
 	@sets_header('Content-Type')
 	def set_content_type(self, client):
 		if hasattr(client.resource, 'content_type'):

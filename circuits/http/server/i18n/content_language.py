@@ -9,7 +9,7 @@ from circuits.http.utils import sets_header, httphandler
 
 class ContentLanguage(BaseComponent):
 
-	@httphandler('request', priority=0.59)
+	@httphandler('request', priority=0.58)
 	@sets_header('Content-Language')
 	def set_content_language(self, client):
 		if hasattr(client.resource, 'language'):

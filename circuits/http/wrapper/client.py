@@ -20,6 +20,7 @@ class Client(object):
 	domain = None
 	resource = None
 	method = None
+	data = None
 	session = None
 	user = None
 
