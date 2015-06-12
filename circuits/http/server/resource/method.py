@@ -30,10 +30,10 @@ class Method(object):
 
 	@resource.setter
 	def resource(self, resource):
-		self._resource = resource
 		self.__class__ = type(b'Method', (type(self), BaseComponent), {})
 		BaseComponent.__init__(self, channel=resource.channel)
 		self.register(resource)
+		#self._resource = resource  # FIXME: recursion if inherited
 
 	def __init__(self, method, http_method):
 		self.http_method = http_method

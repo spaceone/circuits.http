@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 import inspect
 
-from circuits import BaseComponent
+from circuits import BaseComponent, handler
 from circuits.http.utils import httphandler
 from circuits.http.server.resource.method import Method
 from circuits.http.server.caching import CacheControl, ETag, Expires, IfRange, LastModified, Vary
@@ -27,23 +27,22 @@ class Resource(BaseComponent):
 		RequestContentType, ContentType
 	]
 
+	path = None
+
 	def __init__(self, channel=None):
 		super(Resource, self).__init__(channel=channel or self.channel)
-		self.path = None
+		self.path = self.path or self.channel
 		self.methods = dict()
+		self.routes = set()
 		self.supported_methods = self.supported_methods
 		self.safe_methods = self.safe_methods
 		self.idempotent_methods = self.idempotent_methods
-		self.children = []
+		self.children = set()
 		self.default_features = self.default_features[:]
 		self.acceptable_languages = set()
 		self.acceptable = set()
-		self.register_routing()
 		self.register_features()
 		self.register_methods()
-
-	def register_routing(self):
-		pass
 
 	def register_features(self):
 		for FeatureType in self.default_features:
@@ -59,6 +58,16 @@ class Resource(BaseComponent):
 
 		self.methods.setdefault('HEAD', self.methods['GET'])
 		self.allowed_methods = tuple(self.methods.keys())
+
+	@handler('registered', channel='*')
+	def _add_resource(self, resource, parent):
+		if parent is self and isinstance(resource, Resource):
+			self.children.add(resource)
+
+	@handler('unregistered', channel='*')
+	def _remove_resource(self, resource, parent):
+		if parent is self and isinstance(resource, Resource):
+			self.children.remove(resource)
 
 	@httphandler('request', priority=1.0)
 	def _pre_request(self, client):
@@ -77,6 +86,9 @@ class Resource(BaseComponent):
 	@httphandler('request', priority=0.5)
 	def _execute_method(self, client):
 		client.data = client.method(client.resource, client)
+
+	def identify(self, client, path_segments):
+		return True
 
 	def etag(self, client):
 		pass
