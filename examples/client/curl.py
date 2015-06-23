@@ -5,6 +5,7 @@ import os
 from argparse import ArgumentParser
 
 from httoop import Request
+from httoop.header import Authorization, ProxyAuthorization
 
 from circuits import handler
 from circuits.http.client import HTTPClient
@@ -61,8 +62,20 @@ class Curl(HTTPClient):
 			request.headers['Cookie'] = a.cookie
 
 		# HTTP authentication
+		username, password = None, None
+		if a.user:
+			username, _, password = a.user.partition(':')
+		if request.uri.username:
+			username = request.uri.username
+		if request.uri.password:
+			password = request.uri.password
+
 		if a.basic:
-			pass
+			basic = Authorization('Basic', {
+				'username': username,
+				'password': password,
+			})
+			request.headers['Authorization'] = bytes(basic)
 		elif a.digest:
 			pass
 		elif a.ntlm:

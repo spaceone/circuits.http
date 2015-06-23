@@ -7,7 +7,7 @@ from circuits.net.events import close, connect, write
 from circuits.http.events import response as ResponseEvent
 
 from httoop import ClientStateMachine
-from httoop.client import ComposedRequest
+from httoop.semantic.request import ComposedRequest
 
 
 class HTTPClient(BaseComponent):

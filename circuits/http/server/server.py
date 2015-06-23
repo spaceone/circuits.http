@@ -15,7 +15,8 @@ from circuits.http.wrapper import Client, Server
 from circuits.http.events import HTTPError, request as RequestEvent, response as ResponseEvent
 
 from httoop import HTTPStatusException, INTERNAL_SERVER_ERROR, Response
-from httoop.server import ServerStateMachine, ComposedResponse
+from httoop.server import ServerStateMachine
+from httoop.semantic.response import ComposedResponse
 
 _ResponseStart = type(b'response.start', (Event,), {})
 _ResponseBody = type(b'response.body', (Event,), {})
