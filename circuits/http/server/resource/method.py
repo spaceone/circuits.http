@@ -33,7 +33,7 @@ class Method(object):
 		self.__class__ = type(b'Method', (type(self), BaseComponent), {})
 		BaseComponent.__init__(self, channel=resource.channel)
 		self.register(resource)
-		#self._resource = resource  # FIXME: recursion if inherited
+		self._resource = resource
 
 	def __init__(self, method, http_method):
 		self.http_method = http_method
@@ -42,6 +42,9 @@ class Method(object):
 		self.idempotent = _htMethod(self.http_method).idempotent
 		self.content_types = {}
 		self._resource = None
+
+	def __call__(self, client):
+		return self.method(self._resource, client)
 
 	def codec(self, mimetype, quality=1.0):
 		def _decorator(codec):

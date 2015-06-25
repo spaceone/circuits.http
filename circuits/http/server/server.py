@@ -14,7 +14,7 @@ from circuits.net.events import close, write, read
 from circuits.http.wrapper import Client, Server
 from circuits.http.events import HTTPError, request as RequestEvent, response as ResponseEvent
 
-from httoop import HTTPStatusException, INTERNAL_SERVER_ERROR, Response
+from httoop import StatusException, INTERNAL_SERVER_ERROR, Response
 from httoop.server import ServerStateMachine
 from httoop.semantic.response import ComposedResponse
 
@@ -64,7 +64,7 @@ class HTTP(BaseComponent):
 
 		try:
 			requests = tuple(http.parse(data))
-		except HTTPStatusException as httperror:
+		except StatusException as httperror:
 			client = self._add_client(http.request, http.response, socket, server)
 			self.fire(HTTPError(client, httperror))
 			# TODO: wait for HTTPError event to be processed and close the connection
@@ -330,7 +330,7 @@ class HTTP(BaseComponent):
 
 	def _handle_exception(self, client, error):
 		etype, httperror, traceback = error
-		if not isinstance(httperror, HTTPStatusException):
+		if not isinstance(httperror, StatusException):
 			httperror = INTERNAL_SERVER_ERROR('%s (%s)' % (etype.__name__, httperror))
 		httperror.traceback = format_tb(traceback)
 		self.fire(HTTPError(client, httperror))

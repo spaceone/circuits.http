@@ -9,7 +9,7 @@ from inspect import getargspec
 from circuits import handler as event_handler
 from circuits.http.events import HTTPError
 
-from httoop import HTTPStatusException
+from httoop import StatusException
 
 
 def sets_header(header, ifmethod=None):
@@ -55,11 +55,13 @@ def httperror(func):
 			if with_event:
 				args = tuple([event] + list(args))
 			return func(self, *args, **kwargs)
-		except HTTPStatusException as httperror_:
+		except BaseException as httperror_:
 			event.stop()
 			if client.events.request is not None:
 				client.events.request.stop()
 				client.events.request = None
+			if not isinstance(httperror_, StatusException):
+				raise
 			self.fire(HTTPError(client, httperror_), client.server.channel)
 	return _decorated
 

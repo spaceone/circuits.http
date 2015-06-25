@@ -85,7 +85,7 @@ class Resource(BaseComponent):
 
 	@httphandler('request', priority=0.5)
 	def _execute_method(self, client):
-		client.data = client.method(client.resource, client)
+		client.data = client.method(client)
 
 	def identify(self, client, path_segments):
 		return True
