@@ -236,7 +236,7 @@ class HTTP(BaseComponent):
 
 		self.fire(ResponseEvent(client))
 
-	@handler("request_failure")
+	@handler("request_failure", channel='*')
 	def _on_request_failure(self, evt, error):
 		"""Handler for exceptions occuring in the request or response event handler"""
 		client = evt.args[0]
@@ -332,7 +332,8 @@ class HTTP(BaseComponent):
 		etype, httperror, traceback = error
 		if not isinstance(httperror, StatusException):
 			httperror = INTERNAL_SERVER_ERROR('%s (%s)' % (etype.__name__, httperror))
-		httperror.traceback = format_tb(traceback)
+		if not isinstance(traceback, (list, tuple)):
+			httperror.traceback = format_tb(traceback)
 		self.fire(HTTPError(client, httperror))
 
 	@handler('error')
