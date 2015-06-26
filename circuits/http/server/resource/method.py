@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from circuits import BaseComponent
 
 from httoop import Method as _htMethod
-from httoop.codecs import Codec as _htCodec
+from httoop.codecs import Codec as _htCodec, lookup as codec_lookup
 
 
 def method(func=None, http_method=None):
@@ -44,9 +44,24 @@ class Method(object):
 		self._resource = None
 
 	def __call__(self, client):
-		return self.method(self._resource, client)
+		return self.method(client.resource, client)
 
 	def codec(self, mimetype, quality=1.0):
+		"""Add a codec to the method. This method is eiter a decorator to add a function which acts as codec.
+			Alternatively the codec from httoop is looked up.
+
+			>>> class MyResource(Resource):
+			... 	@method
+			... 	def GET(self, client):
+			... 		return some_data
+			...
+			... 	GET.codec('application/json', quality=0.5)  # add httoop default codec
+			... 	@GET.codec('text/html', quality=1.0)  # implement own codec
+			... 	def _get_html(self, client):
+			... 		client.response.body = '<html>%s</html>' % (client.data,)
+		"""
+		mime_codec = codec_lookup(mimetype, raise_errors=False)
+		self.add_codec(mime_codec, quality)
 		def _decorator(codec):
 			self.add_codec(codec, mimetype, quality)
 			return codec
