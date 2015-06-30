@@ -4,8 +4,8 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from ssl import SSLError
 from time import time
+from ssl import SSLError
 from traceback import format_tb
 
 from circuits import BaseComponent, handler, reprhandler, Event
@@ -13,9 +13,9 @@ from circuits.net.utils import is_ssl_handshake
 from circuits.net.events import close, write, read
 from circuits.http.wrapper import Client, Server
 from circuits.http.events import HTTPError, request as RequestEvent, response as ResponseEvent
+from circuits.http.server._state import State
 
 from httoop import StatusException, INTERNAL_SERVER_ERROR, Response
-from httoop.server import ServerStateMachine
 from httoop.semantic.response import ComposedResponse
 
 _ResponseStart = type(b'response.start', (Event,), {})
@@ -51,32 +51,26 @@ class HTTP(BaseComponent):
 				self.fire(close(socket))
 				return
 
-			self._buffers[socket] = {
-				'parser': ServerStateMachine(server.scheme, server.host, server.port),
-				'requests': [],
-				'responses': set(),
-				'response_started': set(),
-				'timeout': None,
-				'composed': {}
-			}
+			self._buffers[socket] = State(self, socket, server)
 
-		http = self._buffers[socket]['parser']
+		http = self._buffers[socket].parser
 
 		try:
 			requests = tuple(http.parse(data))
 		except StatusException as httperror:
-			client = self._add_client(http.request, http.response, socket, server)
+			client = self._add_client(Client(http.request, http.response, socket, server))
 			self.fire(HTTPError(client, httperror))
 			# TODO: wait for HTTPError event to be processed and close the connection
 		else:
-			for request, response in requests:
-				client = self._add_client(request, response, socket, server)
+			for client in requests:
+				self._add_client(client)
 				self.fire(RequestEvent(client))
 
-	def _add_client(self, request, response, socket, server):
-		client = Client(request, response, socket, server)
-		self._buffers[socket]['requests'].append(client)
-		return client
+	def _add_client(self, client):
+		self._buffers[client.socket].requests.append(client)
+
+	def on_headers_complete(self, client):
+		pass
 
 	@handler('read', 'connect', priority=-0.1)
 	def _timeout(self, *args):
@@ -94,20 +88,20 @@ class HTTP(BaseComponent):
 			# FIXME: does not exists yet on "connect"
 			return  # disconnected
 
-		timeout = state['timeout']
+		timeout = state.timeout
 		if timeout is not None:
 			timeout.abort = True
 			timeout.expiry = time()
 
 		timeout = sleep(self.connection_idle_timeout)
 		timeout.abort = False
-		state['timeout'] = timeout
+		state.timeout = timeout
 
 		yield timeout
 
 		if timeout.abort:
 			return
-		if all(client.done for client in state['requests']):
+		if all(client.done for client in state.requests):
 			self.fire(close(socket))
 		#else:
 			# TODO: implement close after last response
@@ -124,11 +118,11 @@ class HTTP(BaseComponent):
 			self._premature_client_disconnect(client)
 			return
 
-		if client in state['responses']:
+		if client in state.responses:
 			raise RuntimeError('Got multiple response events for client: %r' % (client,))
 
-		state['responses'].add(client)
-		pipeline = state['requests']
+		state.responses.add(client)
+		pipeline = state.requests
 		if not pipeline or pipeline[0] is not client:
 			return  # a previous request is unfinished
 
@@ -146,12 +140,12 @@ class HTTP(BaseComponent):
 			self._premature_client_disconnect(client)
 			return
 
-		state['response_started'].add(client)
+		state.response_started.add(client)
 
 		# prepare for sending
 		composed = ComposedResponse(response, request)
 		composed.prepare()
-		state['composed'][client] = composed
+		state.composed[client] = composed
 
 		# send HTTP response status line and headers
 		bresponse = bytes(response)
@@ -188,17 +182,17 @@ class HTTP(BaseComponent):
 		except KeyError:  # client disconnected
 			self._premature_client_disconnect(client)
 			return
-		pipeline = state['requests']
+		pipeline = state.requests
 		assert pipeline and pipeline[0] is client
 		pipeline.pop(0)
 
 		try:
 			client_ = pipeline[0]
 		except IndexError:  # no further request
-			if state['composed'][client].close:  # FIXME: composed
+			if state.composed[client].close:  # FIXME: composed
 				self.fire(close(socket))
 		else:
-			if client_ in state['responses'] and client_ not in state['response_started']:
+			if client_ in state.responses and client_ not in state.response_started:
 				self.fire(_ResponseStart(client_))
 
 	@handler('httperror')
@@ -209,7 +203,7 @@ class HTTP(BaseComponent):
 			self._premature_client_disconnect(client)
 			return
 
-		if client in state['responses']:
+		if client in state.responses:
 			event.stop()
 			raise RuntimeError('Got httperror event after response event. Client: %r, HTTPError: %r. Ignoring it.' % (client, httperror))
 
@@ -288,7 +282,7 @@ class HTTP(BaseComponent):
 		except KeyError:
 			self._premature_client_disconnect(client)
 			return
-		if client in state['responses']:
+		if client in state.responses:
 			return
 		self.fire(write(socket, b'%s\r\n' % (Response(status=500),))) # TODO: self.default_internal_server_error
 		self.fire(close(socket))
