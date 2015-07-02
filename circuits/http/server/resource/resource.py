@@ -51,7 +51,7 @@ class Resource(BaseComponent):
 	def register_methods(self):
 		for name, member in inspect.getmembers(self.__class__, Method.is_method):
 			member.resource = self
-			self.methods[member.http_method] = member
+			self.methods[member.http_method] = getattr(self, name)
 
 		if 'GET' not in self.methods:
 			raise RuntimeError('A HTTP resource must support a GET method.')
@@ -86,6 +86,7 @@ class Resource(BaseComponent):
 	@httphandler('request', priority=0.5)
 	def _execute_method(self, client):
 		client.data = client.method(client)
+		client.method.encode(client)
 
 	def identify(self, client, path_segments):
 		return True

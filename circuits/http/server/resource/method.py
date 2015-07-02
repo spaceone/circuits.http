@@ -58,7 +58,7 @@ class Method(object):
 			... 	GET.codec('application/json', quality=0.5)  # add httoop default codec
 			... 	@GET.codec('text/html', quality=1.0)  # implement own codec
 			... 	def _get_html(self, client):
-			... 		client.response.body = '<html>%s</html>' % (client.data,)
+			... 		return b'<html>%s</html>' % (client.data,)
 		"""
 		mime_codec = codec_lookup(mimetype, raise_errors=False)
 		self.add_codec(mime_codec, mimetype, quality)
@@ -67,10 +67,21 @@ class Method(object):
 			return codec
 		return _decorator
 
+	def encode(self, client):
+		if 'Content-Type' not in client.response.headers:
+			return
+
+		try:
+			codec, quality = client.method.content_types[client.response.headers.element('Content-Type').mimetype]
+		except KeyError:
+			return
+		client.response.body = codec(client.resource, client)
+
 	def add_codec(self, codec, mimetype, quality):
 		_codec = codec
-		if isinstance(codec, _htCodec):
+		if isinstance(codec, _htCodec) or isinstance(codec, type) and issubclass(codec, _htCodec):
 			def _codec(resource, client):
+				return codec.encode(client.data)
 				client.response.body.codec = codec
 				client.response.body.encode()
 		self.content_types[mimetype] = (_codec, quality)
@@ -79,12 +90,14 @@ class Method(object):
 		# TODO: optimize a lot, find a nice algorithm!
 		accepted_mimetypes = client.request.headers.values('Accept')
 		available_mimetypes = client.method.available_mimetypes
+		if not available_mimetypes:
+			return
 		for mimetype in available_mimetypes:
 			if mimetype in accepted_mimetypes:
 				return mimetype
 		for accepted in accepted_mimetypes:
 			if accepted in ('*', '*/*'):
-				return available_mimetypes and available_mimetypes[0]
+				return available_mimetypes[0]
 			if accepted.endswith('/*'):
 				for mimetype in available_mimetypes:
 					if mimetype.startswith(accepted[:-1]):
