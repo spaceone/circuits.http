@@ -33,7 +33,7 @@ class Method(object):
 		self.__class__ = type(b'Method', (type(self), BaseComponent), {})
 		BaseComponent.__init__(self, channel=resource.channel)
 		self.register(resource)
-		self._resource = resource
+		#self._resource = resource  # FIXME: recursion error
 
 	def __init__(self, method, http_method):
 		self.http_method = http_method
@@ -61,7 +61,7 @@ class Method(object):
 			... 		client.response.body = '<html>%s</html>' % (client.data,)
 		"""
 		mime_codec = codec_lookup(mimetype, raise_errors=False)
-		self.add_codec(mime_codec, quality)
+		self.add_codec(mime_codec, mimetype, quality)
 		def _decorator(codec):
 			self.add_codec(codec, mimetype, quality)
 			return codec
