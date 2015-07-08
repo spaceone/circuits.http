@@ -4,8 +4,9 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from circuits import BaseComponent
+from circuits.http.utils import allof
 
-from httoop import Method as _htMethod
+from httoop import Method as _htMethod, FORBIDDEN
 from httoop.codecs import Codec as _htCodec, lookup as codec_lookup
 
 
@@ -42,11 +43,17 @@ class Method(object):
 		self.idempotent = _htMethod(self.http_method).idempotent
 		self.content_types = {}
 		self._resource = None
+		self._conditions = []
 
 	def __call__(self, client):
+		if not allof(*self._conditions)(client):
+			raise FORBIDDEN()
 		return self.method(client.resource, client)
 
-	def codec(self, mimetype, quality=1.0):
+	def conditions(self, *conditions):
+		self._conditions.extend(conditions)
+
+	def codec(self, mimetype, quality=1.0, **params):
 		"""Add a codec to the method. This method is eiter a decorator to add a function which acts as codec.
 			Alternatively the codec from httoop is looked up.
 
@@ -56,28 +63,28 @@ class Method(object):
 			... 		return some_data
 			...
 			... 	GET.codec('application/json', quality=0.5)  # add httoop default codec
-			... 	@GET.codec('text/html', quality=1.0)  # implement own codec
+			... 	@GET.codec('text/html', quality=1.0, charset='utf-8')  # implement own codec
 			... 	def _get_html(self, client):
 			... 		return b'<html>%s</html>' % (client.data,)
 		"""
 		mime_codec = codec_lookup(mimetype, raise_errors=False)
-		self.add_codec(mime_codec, mimetype, quality)
+		self.add_codec(mime_codec, mimetype, quality, params)
 		def _decorator(codec):
-			self.add_codec(codec, mimetype, quality)
+			self.add_codec(codec, mimetype, quality, params)
 			return codec
 		return _decorator
 
 	def encode(self, client):
 		if 'Content-Type' not in client.response.headers:
 			return
-
+		mimetype = client.response.headers.element('Content-Type').mimetype
 		try:
-			codec, quality = client.method.content_types[client.response.headers.element('Content-Type').mimetype]
+			codec, quality = client.method.content_types[mimetype]
 		except KeyError:
 			return
 		client.response.body = codec(client.resource, client)
 
-	def add_codec(self, codec, mimetype, quality):
+	def add_codec(self, codec, mimetype, quality, params):
 		_codec = codec
 		if isinstance(codec, _htCodec) or isinstance(codec, type) and issubclass(codec, _htCodec):
 			def _codec(resource, client):
