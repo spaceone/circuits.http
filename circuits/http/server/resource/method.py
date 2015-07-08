@@ -110,6 +110,9 @@ class Method(object):
 					if mimetype.startswith(accepted[:-1]):
 						return mimetype
 
+	def content_language_negotiation(self, client):
+		return
+
 	@classmethod
 	def is_method(cls, member):
 		return isinstance(member, Method)

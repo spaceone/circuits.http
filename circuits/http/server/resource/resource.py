@@ -98,7 +98,7 @@ class Resource(BaseComponent):
 		pass
 
 	def content_language(self, client):
-		pass
+		return client.method.content_language_negotiation(client)
 
 	def cache_control(self, client):
 		pass
