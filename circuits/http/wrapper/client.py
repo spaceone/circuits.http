@@ -23,6 +23,7 @@ class Client(object):
 	data = None
 	session = None
 	user = None
+	peer_cert = None
 
 	# TODO: move into server / statemachine
 	done = False  # indicates that the response has been send to the socket
@@ -56,6 +57,8 @@ class Client(object):
 			self.remote.resolve()  # TODO: resolve only when accessed?
 
 		self.events = type(b'events', (object,), {
+			b'routing': None,
+			b'authentication': None,
 			b'request': None,
 			b'response': None
 		})()

@@ -46,3 +46,10 @@ class routing(Event):
 	"""
 	success = True
 	failure = True
+
+
+class authentication(Event):
+	"""Authentication event
+
+		args: (client,)
+	"""
