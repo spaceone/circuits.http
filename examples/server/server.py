@@ -26,6 +26,8 @@ class HTTPServer(BaseComponent):
 
 
 if __name__ == '__main__':
+	import sys
 	server = HTTPServer()
-	server += Debugger(events=True)
+	if sys.argv[1:]:
+		server += Debugger(events=True)
 	server.run()
