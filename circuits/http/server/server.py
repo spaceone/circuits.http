@@ -58,7 +58,8 @@ class HTTP(BaseComponent):
 		try:
 			requests = tuple(http.parse(data))
 		except StatusException as httperror:
-			client = self._add_client(Client(http.request, http.response, socket, server))
+			client = Client(http.request, http.response, socket, server)
+			self._add_client(client)
 			self.fire(HTTPError(client, httperror))
 			# TODO: wait for HTTPError event to be processed and close the connection
 		else:
