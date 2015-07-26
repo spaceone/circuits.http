@@ -85,8 +85,14 @@ class Resource(BaseComponent):
 
 	@httphandler('request', priority=0.5)
 	def _execute_method(self, client):
-		client.data = client.method(client)
+		client.data = client.method(*self.positional_arguments(client), **self.keyword_arguments(client))
 		client.method.encode(client)
+
+	def keyword_arguments(self, client):
+		return {}
+
+	def positional_arguments(self, client):
+		return (client,)
 
 	def identify(self, client, path_segments):
 		return True
