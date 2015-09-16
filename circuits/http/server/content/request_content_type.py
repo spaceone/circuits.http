@@ -6,10 +6,17 @@ from __future__ import unicode_literals
 from circuits import BaseComponent
 from circuits.http.utils import httphandler
 
-from httoop import BAD_REQUEST, UNSUPPORTED_MEDIA_TYPE, DecodeError
+from httoop import BAD_REQUEST, UNSUPPORTED_MEDIA_TYPE, PAYLOAD_TOO_LARGE, DecodeError
 
 
 class RequestContentType(BaseComponent):
+
+	@httphandler('request', priority=0.56)
+	def check_maximum_payload_length(Self, client):
+		if hasatttr(client.resource, 'maximum_payload_length'):
+			max_length = client.resource.maximum_payload_length(client)
+			if max_length > len(client.request.body):
+				raise PAYLOAD_TOO_LARGE('The request payload is too large. Maximum allowed length is %d bytes.' % (max_length,))
 
 	@httphandler('request', priority=0.55)
 	def decode_input_representation(self, client):
