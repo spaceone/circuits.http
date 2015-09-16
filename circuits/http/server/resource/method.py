@@ -45,10 +45,10 @@ class Method(object):
 		self._resource = None
 		self._conditions = []
 
-	def __call__(self, client):
+	def __call__(self, client, *args, **kwargs):
 		if not allof(*self._conditions)(client):
 			raise FORBIDDEN()
-		return self.method(client.resource, client)
+		return self.method(client.resource, client, *args, **kwargs)
 
 	def conditions(self, *conditions):
 		self._conditions.extend(conditions)
