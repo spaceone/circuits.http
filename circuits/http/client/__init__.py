@@ -28,6 +28,8 @@ class HTTPClient(BaseComponent):
 	def _on_connect(self, host=None, port=None, secure=None):
 		try:
 			socket = self._socket_map[(host, port, secure)]
+			if not socket.connected:
+				raise KeyError
 		except KeyError:
 			socket = TCPClient(channel='%s_%d' % (self.channel, len(self._buffers))).register(self)
 			self._buffers[socket] = {
@@ -51,7 +53,8 @@ class HTTPClient(BaseComponent):
 			secure = client.request.uri.scheme == u'https'
 			result = yield self.call(connect(host, port, secure))
 			client.socket = result.value
-			yield self.wait("connected", client.socket.channel)
+			if not client.socket.connected:
+				yield self.wait("connected", client.socket.channel)
 
 		try:
 			state = self._buffers[client.socket]
