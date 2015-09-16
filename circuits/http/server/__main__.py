@@ -10,6 +10,7 @@ from httoop import URI
 from circuits import BaseComponent, Debugger
 from circuits.core.helpers import FallBackExceptionHandler
 from circuits.net.sockets import TCPServer, UDPServer, UNIXServer
+from circuits.app import DropPrivileges, Daemon
 
 from circuits.http import __version__ as version, __name__ as name
 from circuits.http.server import HTTP
@@ -63,6 +64,9 @@ class HTTPServer(BaseComponent):
 		add('-g', '--group', default=None,
 			help='the groupname or group id to run the proccess as. Only possible if run as root.')
 
+		add('--umask', type=int,
+			help='the umask this process should run as if dropping priviledges')
+
 		add('-l', '--logfile', default=sys.stdout, dest='logfile', help='the logfile')
 
 		add('-d', '--debug', type=int, default=0, dest='loglevel',
@@ -78,10 +82,11 @@ class HTTPServer(BaseComponent):
 		self.add_sockets()
 
 	def add_daemonizing(self):
-		pass
+		if self.arguments.daemonize:
+			self += Daemon(self.arguments.pidfile, os.curdir)
 
 	def add_drop_priviledges(self):
-		pass
+		self += DropPrivileges(self.arguments.user, self.arguments.group, self.arguments.umask, channel=self.channel)
 
 	def add_logger(self):
 		self += Logger(self.arguments.logfile, channel=self.channel)
