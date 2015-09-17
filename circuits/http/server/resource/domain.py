@@ -39,6 +39,6 @@ class Domain(BaseComponent):
 			self.children.remove(resource)
 
 	def url(self, client, *path):
-		uri = URI(scheme=client.request.scheme, host=self.fqdn, port=client.server.port)
+		uri = URI(scheme=client.request.uri.scheme, host=self.fqdn, port=client.server.port)
 		uri.join(*path)
 		return uri
