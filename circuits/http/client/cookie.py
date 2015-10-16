@@ -2,6 +2,8 @@
 
 from time import time
 
+from httoop.header import Cookie as htCookie
+
 from circuits.core import handler, BaseComponent
 
 
@@ -23,6 +25,9 @@ class Cookie(object):
 		self.httponly = kwargs.get('httponly')
 		self.creation_time = kwargs.get('creation_time')
 		self.last_access_time = kwargs.get('last_access_time')
+
+	def __repr__(self):
+		return '<Cookie %r=%r>' % (self.cookie_name, self.cookie_value)
 
 	def expired(self):
 		if not self.persistent:
@@ -90,11 +95,8 @@ class CookieStorage(BaseComponent):
 		for cookie in cookies.copy():
 			if not self.cookie_matches(client, cookie, is_secure):
 				continue
-			# TODO: use httoop for this
-			if 'Cookie' not in client.request.headers:
-				client.request.headers.append('Cookie', u'%s=%s' % (cookie.cookie_name, cookie.cookie_value))
-			else:
-				dict.__setitem__(client.request.headers, 'Cookie', u'%s\r\nCookie: %s=%s' % (client.request.headers['Cookie'], cookie.cookie_name, cookie.cookie_value))
+			htcookie = htCookie(cookie.cookie_name, cookie.cookie_value)
+			client.request.headers.append('Cookie', bytes(htcookie))
 
 	def cookie_matches(self, client, cookie, is_secure):
 		if cookie.secure and not is_secure:
