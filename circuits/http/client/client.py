@@ -51,7 +51,7 @@ class HTTPClient(BaseComponent):
 			host = client.request.uri.host
 			port = client.request.uri.port
 			secure = client.request.uri.scheme == u'https'
-			result = yield self.call(connect(host, port, secure))
+			result = yield self.call(connect(host, port, secure, certfile=client.ssl.cert, keyfile=client.ssl.key, ca_certs=[client.ssl.ca]))
 			client.socket = result.value
 			if not client.socket.connected:
 				yield self.wait("connected", client.socket.channel)

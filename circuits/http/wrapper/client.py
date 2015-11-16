@@ -5,6 +5,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from circuits.http.wrapper.host import Host
+from circuits.http.wrapper.ssl import SSL
 
 
 class Client(object):
@@ -14,6 +15,7 @@ class Client(object):
 
 	local = Host("127.0.0.1", 80)
 	remote = Host("", 0)
+	ssl = SSL()
 
 	# TODO: how can we get rid of this? (belongs somewhere else)
 	kwargs = None  # storage for e.g. translation instance
@@ -23,7 +25,6 @@ class Client(object):
 	data = None
 	session = None
 	user = None
-	peer_cert = None
 
 	# TODO: move into server / statemachine
 	done = False  # indicates that the response has been send to the socket
