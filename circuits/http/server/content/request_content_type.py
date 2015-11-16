@@ -13,7 +13,7 @@ class RequestContentType(BaseComponent):
 
 	@httphandler('request', priority=0.56)
 	def check_maximum_payload_length(Self, client):
-		if hasatttr(client.resource, 'maximum_payload_length'):
+		if hasattr(client.resource, 'maximum_payload_length'):
 			max_length = client.resource.maximum_payload_length(client)
 			if max_length > len(client.request.body):
 				raise PAYLOAD_TOO_LARGE('The request payload is too large. Maximum allowed length is %d bytes.' % (max_length,))

@@ -70,6 +70,11 @@ class Curl(HTTPClient):
 		if request.uri.password:
 			password = request.uri.password
 
+		if a.anyauth:
+			a.basic = a.anyauth
+			a.digest = a.anyauth
+			a.ntlm = a.anyauth
+			a.negotiate = a.anyauth
 		if a.basic:
 			basic = Authorization('Basic', {
 				'username': username,
@@ -81,8 +86,6 @@ class Curl(HTTPClient):
 		elif a.ntlm:
 			pass
 		elif a.negotiate:
-			pass
-		elif a.anyauth:
 			pass
 
 		# Request Body

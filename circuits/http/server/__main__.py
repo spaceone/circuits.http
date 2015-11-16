@@ -3,6 +3,7 @@
 """
 
 import sys
+import os
 from argparse import ArgumentParser
 
 from httoop import URI
@@ -83,7 +84,7 @@ class HTTPServer(BaseComponent):
 
 	def add_daemonizing(self):
 		if self.arguments.daemonize:
-			self += Daemon(self.arguments.pidfile, os.curdir)
+			self += Daemon(self.arguments.pidfile, os.getcwd())
 
 	def add_drop_priviledges(self):
 		self += DropPrivileges(self.arguments.user, self.arguments.group, self.arguments.umask, channel=self.channel)

@@ -95,6 +95,7 @@ class Method(object):
 
 	def content_type_negotiation(self, client):
 		# TODO: optimize a lot, find a nice algorithm!
+		# TODO: q=0 should be ignored
 		accepted_mimetypes = client.request.headers.values('Accept')
 		available_mimetypes = client.method.available_mimetypes
 		if not available_mimetypes:
