@@ -4,13 +4,14 @@
 
 import sys
 import os
+from socket import error as SocketError
 from argparse import ArgumentParser
 
 from httoop import URI
 
 from circuits import BaseComponent, Debugger
 from circuits.core.helpers import FallBackExceptionHandler
-from circuits.net.sockets import TCPServer, UDPServer, UNIXServer
+from circuits.net.sockets import TCPServer, UDPServer, UNIXServer, TCP6Server, UDP6Server
 from circuits.app import DropPrivileges, Daemon
 
 from circuits.http import __version__ as version, __name__ as name
@@ -29,6 +30,12 @@ class HTTPServer(BaseComponent):
 		'tcp': TCPServer,
 		'unix': UNIXServer,
 		'udp': UDPServer,
+		6: {
+			'http': TCP6Server,
+			'https': TCP6Server,
+			'tcp': TCP6Server,
+			'udp': UDP6Server,
+		}
 	}
 
 	def __init__(self, *args, **kwargs):
@@ -103,15 +110,34 @@ class HTTPServer(BaseComponent):
 		for bind in self.arguments.bind:
 			self.add_socket(URI(bind))
 
-	def add_socket(self, bind):
-		# TODO: IPv6
-		# FIXME: Unix-socket arguments
-		SocketType = self.socket_types.get(bind.scheme, TCPServer)
-		kwargs = dict(bind.query)
-		if bind.scheme == 'https':
+	def add_socket(self, uri):
+		SocketType = self.socket_types.get(uri.scheme, TCPServer)
+		bind = (uri.host, uri.port)
+
+		# IPv6
+		if uri.host.startswith('[') and uri.host.endswith(']'):
+			SocketType = self.socket_types[6].get(uri.scheme, TCP6Server)
+			bind = (uri.host[1:-1], uri.port)
+
+		# UNIX sockets
+		if uri.scheme == 'unix':
+			bind = uri.path
+
+		# HTTPS
+		kwargs = dict(uri.query)
+		if uri.scheme == 'https':
 			kwargs['secure'] = True
 
-		self.http += SocketType((bind.host, bind.port), channel=self.http.channel, **kwargs)
+		try:
+			self.http += SocketType(bind, channel=self.http.channel, **kwargs)
+		except RuntimeError as exc:
+			self.exit('Could not create socket for URI "%s": %s. Further socket options can be specified via the query string.' % (uri.uri, exc,))
+		except SocketError as exc:
+			self.exit('Could not create socket %s: %s.' % (bind, exc))
+
+	def exit(self, message, exitcode=1):
+		sys.stderr.write(message)
+		raise SystemExit(exitcode)
 
 	@classmethod
 	def main(cls, args=sys.argv[1:]):
