@@ -40,5 +40,7 @@ class Domain(BaseComponent):
 
 	def url(self, client, *path):
 		uri = URI(scheme=client.request.uri.scheme, host=self.fqdn, port=client.server.port)
-		uri.join(*path)
+		uri2 = URI()
+		uri2.path_segments = path
+		uri.join(uri2)
 		return uri

@@ -24,7 +24,7 @@ class DomainRouter(BaseComponent):
 	def _http_one_zero(self, client):
 		# HTTP 1.0 does not contain Host-header
 		if client.request.protocol <= (1, 0):
-			client.request.header['Host'] = client.local.host
+			client.request.header.setdefault('Host', client.local.host)
 
 	@httphandler('routing', priority=1.8)
 	def _route_host(self, client):
