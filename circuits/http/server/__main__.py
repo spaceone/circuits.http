@@ -16,7 +16,7 @@ from circuits.app import DropPrivileges, Daemon
 
 from circuits.http import __version__ as version, __name__ as name
 from circuits.http.server import HTTP
-from circuits.http.server.routing import DomainRouter, Router
+from circuits.http.server.routing import DomainRouter
 from circuits.http.server.log import Logger
 
 
@@ -47,7 +47,6 @@ class HTTPServer(BaseComponent):
 		self.parse_arguments(args)
 		self.http = HTTP(channel=self.channel)
 		self += self.http
-		self += Router(channel=self.channel)
 		self.domains = DomainRouter(channel=self.channel)
 		self += self.domains
 

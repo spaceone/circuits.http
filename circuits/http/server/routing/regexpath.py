@@ -4,11 +4,12 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from circuits import BaseComponent, Event, handler
+from circuits.http.server.routing.router import Router
 from circuits.http.server.routing.utils import regexpath
 from circuits.http.server.resource import Resource, Domain
 
 
-class RegexPathRouter(BaseComponent):
+class RegexPathRouter(Router):
 
 	def __init__(self, channel):
 		BaseComponent.__init__(self, channel=channel)

@@ -12,7 +12,7 @@ from circuits import BaseComponent, handler, reprhandler, Event
 from circuits.net.utils import is_ssl_handshake
 from circuits.net.events import close, write, read
 from circuits.http.wrapper import Client, Server
-from circuits.http.events import HTTPError, request as RequestEvent, response as ResponseEvent
+from circuits.http.events import HTTPError, request as RequestEvent, response as ResponseEvent, routing as RoutingEvent
 from circuits.http.server._state import State
 
 from httoop import StatusException, INTERNAL_SERVER_ERROR, Response
@@ -65,7 +65,7 @@ class HTTP(BaseComponent):
 		else:
 			for client in requests:
 				self._add_client(client)
-				self.fire(RequestEvent(client))
+				self.fire(RoutingEvent(client))  # TODO: fire routing event in on_headers_complete and wait for sending the request event until the request is parsed completely
 
 	def _add_client(self, client):
 		self._buffers[client.socket].requests.append(client)

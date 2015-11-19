@@ -34,7 +34,7 @@ class Method(object):
 		self.__class__ = type(b'Method', (type(self), BaseComponent), {})
 		BaseComponent.__init__(self, channel=resource.channel)
 		self.register(resource)
-		#self._resource = resource  # FIXME: recursion error
+		#self._resource = resource  # FIXME: recursion error: circuits trys to register instance members which are components
 
 	def __init__(self, method, http_method):
 		self.http_method = http_method
@@ -51,6 +51,7 @@ class Method(object):
 		return self.method(client.resource, client, *args, **kwargs)
 
 	def conditions(self, *conditions):
+		# TODO: make it possible to detect methods when using this as decorator (a function is passed)
 		self._conditions.extend(conditions)
 
 	def codec(self, mimetype, quality=1.0, **params):

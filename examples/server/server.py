@@ -3,7 +3,7 @@ from circuits.net.sockets import TCPServer
 
 from circuits.http.server import HTTP
 from circuits.http.server.resource import Domain
-from circuits.http.server.routing import DomainRouter, Router
+from circuits.http.server.routing import DomainRouter
 from circuits.http.server.log import Logger
 
 
@@ -17,7 +17,6 @@ class HTTPServer(BaseComponent):
 		self += http
 		self += Logger(channel=self.channel)
 		http += TCPServer(('localhost', 8090), channel=self.channel)
-		self += Router(channel=self.channel)
 		self.domains = DomainRouter(channel=self.channel)
 		self += self.domains
 

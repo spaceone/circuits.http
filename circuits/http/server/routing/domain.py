@@ -8,7 +8,7 @@ from circuits.http.utils import httphandler
 from circuits.http.events import routing
 from circuits.http.server.resource import Domain
 
-from httoop import MOVED_PERMANENTLY
+from httoop import MOVED_PERMANENTLY, BAD_REQUEST
 from httoop.header import Host
 
 
@@ -58,9 +58,19 @@ class DomainRouter(BaseComponent):
 		path.query = {}  # TODO: check if we MUST leave out querystring
 		raise MOVED_PERMANENTLY(path)
 
-	@httphandler('routing', priority=1.5)
-	def _route_into_domain(self, client):
-		if client.domain is not None:
+	@httphandler('routing', priority=-0.11)
+	def _on_domain_routing(self, client):
+		if client.domain is None:
+			# TODO: create a exception for this, so that implementors can give
+			# alternative host links
+			# TODO: Implement ExposeDomains component
+			UnknownHost = lambda: BAD_REQUEST('The requested Host is unknown.')
+			raise UnknownHost()
+
+	@httphandler('routing_success')
+	def _route_into_domain(self, evt, result):
+		client = evt.args[0]
+		if not evt.stopped:
 			self.fire(routing(client), client.domain.channel)
 
 	@handler('registered', channel='*')
