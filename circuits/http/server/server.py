@@ -222,10 +222,11 @@ class HTTP(BaseComponent):
 		# set HTTP Body
 		client.response.body = httperror.body
 
-		channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
-		event = Event.create(b'httperror_%d' % (httperror.status,))
-		self.fire(event, *channels)
-		yield self.wait(event)
+		# FIXME: nice feature but is performance leak if using self.wait()
+		#channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
+		#event = Event.create(b'httperror_%d' % (httperror.status,))
+		#self.fire(event, *channels)
+		#yield self.wait(event)
 
 		client.response.body.encode()
 
