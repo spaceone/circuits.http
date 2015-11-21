@@ -23,7 +23,7 @@ class Method(object):
 
 	@property
 	def available_mimetypes(self):
-		return [m[1] for m in sorted((codec_priority[1], mimetype) for mimetype, codec_priority in self.content_types.items())]
+		return [m[1] for m in sorted(((codec_priority[1], mimetype) for mimetype, codec_priority in self.content_types.items()), reverse=True)]
 
 	@property
 	def resource(self):
