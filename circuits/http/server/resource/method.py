@@ -95,21 +95,21 @@ class Method(object):
 		self.content_types[mimetype] = (_codec, quality)
 
 	def content_type_negotiation(self, client):
-		# TODO: optimize a lot, find a nice algorithm!
-		# TODO: q=0 should be ignored
-		accepted_mimetypes = client.request.headers.values('Accept')
+		accepted_mimetypes = dict((e.value, e.quality) for e in client.request.headers.elements('Accept')) or {'*/*': 1}
 		available_mimetypes = client.method.available_mimetypes
 		if not available_mimetypes:
 			return
 		for mimetype in available_mimetypes:
-			if mimetype in accepted_mimetypes:
+			if accepted_mimetypes.get(mimetype):
 				return mimetype
 		for accepted in accepted_mimetypes:
 			if accepted in ('*', '*/*'):
-				return available_mimetypes[0]
+				for available in available_mimetypes:
+					if accepted_mimetypes.get(available, 1):
+						return available
 			if accepted.endswith('/*'):
 				for mimetype in available_mimetypes:
-					if mimetype.startswith(accepted[:-1]):
+					if mimetype.startswith(accepted[:-1]) and accepted_mimetypes.get(mimetype, 1):
 						return mimetype
 
 	def content_language_negotiation(self, client):
