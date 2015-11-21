@@ -32,9 +32,7 @@ class RegexPathRouter(Router):
 	@handler('routing')
 	def _find_resource(self, client):
 		path = client.request.uri.path
-		result = self.match(path)
-		if result is not None:
-			resource, path_segments = result
+		for resource, path_segments in self.match(path):
 			if resource.identify(client, path_segments):
 				client.resource = resource
 				client.path_segments = path_segments
@@ -44,7 +42,7 @@ class RegexPathRouter(Router):
 			#defaults = pattern.groupindex.keys()
 			result = pattern.match(path)
 			if result:
-				return resource, result.groupdict()
+				yield resource, result.groupdict()
 
 	def _all_childs(self, childrens):
 		for children in childrens:
