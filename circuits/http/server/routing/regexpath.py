@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from circuits import BaseComponent, Event, handler
+from circuits.http.utils import httphandler
 from circuits.http.server.routing.router import Router
 from circuits.http.server.routing.utils import regexpath
 from circuits.http.server.resource import Resource, Domain
@@ -29,7 +30,7 @@ class RegexPathRouter(Router):
 			routes.add((resource, regexpath(path)))
 		self.routes = routes
 
-	@handler('routing')
+	@httphandler('routing')
 	def _find_resource(self, client):
 		path = client.request.uri.path
 		for resource, path_segments in self.match(path):

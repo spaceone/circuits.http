@@ -57,12 +57,16 @@ def httperror(func):
 			return func(self, *args, **kwargs)
 		except BaseException as httperror_:
 			event.stop()
+			channels = set([client.server.channel])
 			if client.events.request is not None:
 				client.events.request.stop()
+				channels.update(client.events.request.channels)
 				client.events.request = None
+			elif client.events.routing is not None:
+				channels.update(client.events.routing.channels)
 			if not isinstance(httperror_, StatusException):
 				raise
-			self.fire(HTTPError(client, httperror_), client.server.channel)
+			self.fire(HTTPError(client, httperror_), *channels)
 	return _decorated
 
 

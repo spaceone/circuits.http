@@ -46,6 +46,7 @@ class Client(object):
 		self.server = server
 
 		self.kwargs = {}
+		self.path_segments = {}
 
 		if self.server is not None:
 			self.local = Host(self.server.host, self.server.port)

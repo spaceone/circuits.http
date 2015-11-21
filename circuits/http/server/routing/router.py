@@ -17,7 +17,7 @@ class Router(BaseComponent):
 		if not evt.stopped:
 			client = evt.args[0]
 			channels = [c.channel for c in (client.domain, client.resource) if c is not None]
-			self.fire(request(client), *channels)
+			client.events.request = self.fire(request(client), *channels).event
 
 	@httphandler('request_success')
 	def _on_request_success(self, evt, result):

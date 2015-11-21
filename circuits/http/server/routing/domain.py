@@ -71,7 +71,7 @@ class DomainRouter(BaseComponent):
 	def _route_into_domain(self, evt, result):
 		client = evt.args[0]
 		if not evt.stopped:
-			self.fire(routing(client), client.domain.channel)
+			client.events.routing = self.fire(routing(client), client.domain.channel).event
 
 	@handler('registered', channel='*')
 	def _add_domain(self, domain, parent):

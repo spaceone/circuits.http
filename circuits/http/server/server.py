@@ -65,7 +65,7 @@ class HTTP(BaseComponent):
 		else:
 			for client in requests:
 				self._add_client(client)
-				self.fire(RoutingEvent(client))  # TODO: fire routing event in on_headers_complete and wait for sending the request event until the request is parsed completely
+				client.events.routing = self.fire(RoutingEvent(client)).event  # TODO: fire routing event in on_headers_complete and wait for sending the request event until the request is parsed completely
 
 	def _add_client(self, client):
 		self._buffers[client.socket].requests.append(client)
@@ -196,22 +196,21 @@ class HTTP(BaseComponent):
 			if client_ in state.responses and client_ not in state.response_started:
 				self.fire(_ResponseStart(client_))
 
-	@handler('httperror')
-	def _on_httperror(self, event, client, httperror):
+	@handler('httperror', priority=1.1)
+	def _on_handle_httperror(self, event, client, httperror):
 		try:
 			state = self._buffers[client.socket]
 		except KeyError:
 			self._premature_client_disconnect(client)
+			event.stop()
 			return
 
 		if client in state.responses:
 			event.stop()
 			raise RuntimeError('Got httperror event after response event. Client: %r, HTTPError: %r. Ignoring it.' % (client, httperror))
 
-	@handler("httperror_success")
-	def _on_httperror_success(self, client, httperror):
-		"""default HTTP error handler"""
-		client, httperror = client.args
+	@handler('httperror', priority=0.1)
+	def _on_httperror(self, event, client, httperror):
 		# TODO: move into httoop?
 		# set the corresponding HTTP status
 		client.response.status = httperror.status
@@ -222,14 +221,18 @@ class HTTP(BaseComponent):
 		# set HTTP Body
 		client.response.body = httperror.body
 
-		# FIXME: nice feature but is performance leak if using self.wait()
-		#channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
-		#event = Event.create(b'httperror_%d' % (httperror.status,))
-		#self.fire(event, *channels)
-		#yield self.wait(event)
+		# fire httperror_XXX event
+#		channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
+		event = Event.create(b'httperror_%d' % (httperror.status,))
+		self.fire(event, *event.channels)
 
+	@handler("httperror_success")
+	def _on_httperror_success(self, evt, httperror):
+		"""default HTTP error handler"""
+		if evt.stopped:
+			return
+		client = evt.args[0]
 		client.response.body.encode()
-
 		self.fire(ResponseEvent(client))
 
 	@handler("request_failure", channel='*')
@@ -273,10 +276,8 @@ class HTTP(BaseComponent):
 
 		self._handle_exception(client, error)
 
-	@handler("httperror_failure", "httperror_success_failure")
+	@handler("httperror_failure")
 	def _on_httperror_failure(self, evt, error):
-		# TODO: log
-		# FIXME: success_failure will fail, due to argument
 		client = evt.args[0]
 		socket = client.socket
 		try:
@@ -286,9 +287,12 @@ class HTTP(BaseComponent):
 			return
 		if client in state.responses:
 			return
-		self.fire(write(socket, b'%s\r\n' % (Response(status=500),))) # TODO: self.default_internal_server_error
+		self.fire(write(socket, self.default_internal_server_error(client, error)))
 		self.fire(close(socket))
-		print('Exception in httperror_failure: %s' % (error,))
+
+	def default_internal_server_error(self, client, error):
+		print('Exception in httperror_failure: %s, %r' % (error, client))
+		return b'%s\r\n' % (Response(status=500),)
 
 	@handler("exception")
 	def _on_exception(self, *args, **kwargs):
@@ -301,6 +305,8 @@ class HTTP(BaseComponent):
 		elif fevent.name == 'response.body':
 			socket = fevent.args[0].socket
 			self.fire(close(socket))
+		elif fevent.name == 'httperror_success':
+			self._on_httperror_failure(fevent.args[0], args)
 		else:
 			# TODO: log
 			handler = reprhandler(kwargs['handler']) if kwargs['handler'] else 'Unknown'
