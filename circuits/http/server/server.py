@@ -44,14 +44,9 @@ class HTTP(BaseComponent):
 		server = Server(event.value.manager)
 
 		if socket not in self._buffers:
-			if not server.secure and is_ssl_handshake(data):
-				# If we receive an SSL handshake at the start of a request
-				# and we're not a secure server, then immediately close the
-				# client connection since we can't respond to it anyway.
-				self.fire(close(socket))
-				return
-
 			self._buffers[socket] = State(self, socket, server)
+			if not server.secure and is_ssl_handshake(data):
+				self.ssl_through_http(socket)
 
 		http = self._buffers[socket].parser
 
@@ -342,10 +337,25 @@ class HTTP(BaseComponent):
 	def _on_socket_error(self, socket, error):
 		if isinstance(error, SSLError):
 			if error.errno == 1 and getattr(error, 'reason', None) == 'HTTP_REQUEST' or error.strerror.endswith(':http request'):
-				self._plain_http_trough_ssl(socket)
+				self.http_through_ssl(socket)
+				return
 			self.fire(close(socket))
 
-	def _plain_http_trough_ssl(self, socket):
-		self.fire(write(socket, """Your browser sent a request that this server could not understand.
+	def http_through_ssl(self, socket):
+		# If we receive a plain HTTP request and we're a TLS enabled socket
+		# inform the user about his misusage and close the connection immediately.
+		self.fire(write(socket, b"""Your browser sent a request that this server could not understand.
 Reason: You're speaking plain HTTP to an SSL-enabled server port.
 Instead use the HTTPS scheme to access this URL, please: https://%s"""))  # TODO: add URI by parsing the data which were written into the socket
+		self.fire(close(socket))
+
+	def ssl_through_http(self, socket):
+		# If we receive a SSL handshake at the start of a request
+		# and we're not a secure server, then immediately close the
+		# client connection since we can't respond to it anyway.
+		parser = self._buffers[socket].parser.parse
+		def parse(cls, data):
+			# TODO: if we have a socket with TLS support we should try to use it instead so that we can speak HTTPS and redirect to the other port.
+			self.fire(close(socket))
+			return parser('')
+		self._buffers[socket].parser = parse

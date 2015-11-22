@@ -12,7 +12,7 @@ from httoop import BAD_REQUEST, UNSUPPORTED_MEDIA_TYPE, PAYLOAD_TOO_LARGE, Decod
 class RequestContentType(BaseComponent):
 
 	@httphandler('request', priority=0.56)
-	def check_maximum_payload_length(Self, client):
+	def check_maximum_payload_length(self, client):
 		if hasattr(client.resource, 'maximum_payload_length'):
 			max_length = client.resource.maximum_payload_length(client)
 			if max_length > len(client.request.body):
@@ -41,7 +41,6 @@ class RequestContentType(BaseComponent):
 
 		try:
 			body = client.request.body.read()  # FIXME: don't load into RAM
-			client.request.body.data = handler(client, body)
-			client.request.body = client.request.body.data
+			client.request.body.data = handler.decode(body)
 		except DecodeError:
 			raise BAD_REQUEST('Could not decode input representation.')
