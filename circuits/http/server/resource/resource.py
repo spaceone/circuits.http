@@ -8,7 +8,7 @@ import inspect
 from circuits import BaseComponent, handler
 from circuits.http.utils import httphandler
 from circuits.http.server.resource.method import Method
-from circuits.http.server.caching import CacheControl, ETag, Expires, IfRange, LastModified, Vary
+from circuits.http.server.caching import CacheControl, ETag, Expires, IfRange, LastModified, Vary, Pragma
 from circuits.http.server.content import RequestContentType, ContentType
 
 from httoop import METHOD_NOT_ALLOWED, NOT_IMPLEMENTED
@@ -23,7 +23,7 @@ class Resource(BaseComponent):
 	allowed_methods = ()
 
 	default_features = [
-		CacheControl, ETag, Expires, IfRange, LastModified, Vary,
+		CacheControl, ETag, Expires, IfRange, LastModified, Vary, Pragma,
 		RequestContentType, ContentType
 	]
 
