@@ -330,7 +330,8 @@ class HTTP(BaseComponent):
 		if not isinstance(httperror, StatusException):
 			httperror = INTERNAL_SERVER_ERROR('%s (%s)' % (etype.__name__, httperror))
 		if not isinstance(traceback, (list, tuple)):
-			httperror.traceback = format_tb(traceback)
+			traceback = format_tb(traceback)
+		httperror.traceback = ''.join(traceback)
 		self.fire(HTTPError(client, httperror))
 
 	@handler('error')
@@ -358,4 +359,4 @@ Instead use the HTTPS scheme to access this URL, please: https://%s"""))  # TODO
 			# TODO: if we have a socket with TLS support we should try to use it instead so that we can speak HTTPS and redirect to the other port.
 			self.fire(close(socket))
 			return parser('')
-		self._buffers[socket].parser = parse
+		self._buffers[socket].parser.parse = parse

@@ -18,7 +18,7 @@ def sets_header(header, ifmethod=None):
 	def _decorator(func):
 		@wraps(func)
 		def _decorated(self, client, *args, **kwargs):
-			if ifmethod and client.method not in ifmethod:
+			if ifmethod and client.request.method not in ifmethod:
 				return
 			value = func(self, client, *args, **kwargs)
 			if value is not None:
@@ -35,7 +35,7 @@ def if_header_set(headers, ifmethod=None):
 	def _decorator(func):
 		@wraps(func)
 		def _decorated(self, client, *args, **kwargs):
-			if ifmethod and client.method not in ifmethod:
+			if ifmethod and client.request.method not in ifmethod:
 				return
 			if any(header in client.request.headers for header in headers):
 				return func(self, client, *args, **kwargs)
