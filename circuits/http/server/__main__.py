@@ -38,6 +38,8 @@ class HTTPServer(BaseComponent):
 		}
 	}
 
+	logformat = None
+
 	def __init__(self, *args, **kwargs):
 		super(HTTPServer, self).__init__(*args, **kwargs)
 		self.parser = ArgumentParser(name, version=str(version), description=__doc__, epilog='https://github.com/spaceone/circuits.http/')
@@ -96,7 +98,7 @@ class HTTPServer(BaseComponent):
 		self += DropPrivileges(self.arguments.user, self.arguments.group, self.arguments.umask, channel=self.channel)
 
 	def add_logger(self):
-		self += Logger(self.arguments.logfile, channel=self.channel)
+		self += Logger(self.arguments.logfile, logformat=self.logformat, channel=self.channel)
 		if self.arguments.loglevel:
 			self += Debugger()
 		else:
