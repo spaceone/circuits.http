@@ -42,6 +42,7 @@ class Method(object):
 		self.safe = _htMethod(self.http_method).safe
 		self.idempotent = _htMethod(self.http_method).idempotent
 		self.content_types = {}
+		self.content_type_params = {}
 		self._resource = None
 		self._conditions = []
 
@@ -69,9 +70,9 @@ class Method(object):
 			... 		return b'<html>%s</html>' % (client.data,)
 		"""
 		mime_codec = codec_lookup(mimetype, raise_errors=False)
-		self.add_codec(mime_codec, mimetype, quality, params)
+		self.add_codec(mime_codec, mimetype, quality, **params)
 		def _decorator(codec):
-			self.add_codec(codec, mimetype, quality, params)
+			self.add_codec(codec, mimetype, quality, **params)
 			return codec
 		return _decorator
 
@@ -83,9 +84,12 @@ class Method(object):
 			codec, quality = client.method.content_types[mimetype]
 		except KeyError:
 			return
+		content_type = client.response.headers.element('Content-Type')
+		content_type.params.update(self.content_type_params[mimetype])
+		client.response.headers['Content-Type'] = bytes(content_type)
 		client.response.body = codec(client.resource, client)
 
-	def add_codec(self, codec, mimetype, quality, params):
+	def add_codec(self, codec, mimetype, quality, **params):
 		_codec = codec
 		if isinstance(codec, _htCodec) or isinstance(codec, type) and issubclass(codec, _htCodec):
 			def _codec(resource, client):
@@ -93,6 +97,7 @@ class Method(object):
 				client.response.body.codec = codec
 				client.response.body.encode()
 		self.content_types[mimetype] = (_codec, quality)
+		self.content_type_params[mimetype] = params
 
 	def content_type_negotiation(self, client):
 		accepted_mimetypes = dict((e.value, e.quality) for e in client.request.headers.elements('Accept')) or {'*/*': 1}

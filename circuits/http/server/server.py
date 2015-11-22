@@ -355,7 +355,7 @@ Instead use the HTTPS scheme to access this URL, please: https://%s"""))  # TODO
 		# and we're not a secure server, then immediately close the
 		# client connection since we can't respond to it anyway.
 		parser = self._buffers[socket].parser.parse
-		def parse(cls, data):
+		def parse(data):
 			# TODO: if we have a socket with TLS support we should try to use it instead so that we can speak HTTPS and redirect to the other port.
 			self.fire(close(socket))
 			return parser('')
