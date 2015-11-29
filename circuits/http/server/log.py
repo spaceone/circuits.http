@@ -14,9 +14,10 @@ from datetime import datetime
 
 class Logger(BaseComponent):
 
-	format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+	_logformat = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+	_timeformat = '[%d/%b/%Y:%H:%M:%S]'
 
-	def __init__(self, logfile=None, logger=None, logformat=format, **kwargs):
+	def __init__(self, logfile=None, logger=None, logformat=_logformat, timeformat=_timeformat, **kwargs):
 		super(Logger, self).__init__(**kwargs)
 
 		if isinstance(logfile, string_types):
@@ -27,7 +28,8 @@ class Logger(BaseComponent):
 			self.file = sys.stdout
 
 		self.logger = logger
-		self.format = logformat
+		self._logformat = logformat
+		self._timeformat = timeformat
 
 	@handler('response.complete', priority=-0.1)
 	def response(self, client):
@@ -49,6 +51,7 @@ class Logger(BaseComponent):
 			'b': response.headers.get('Content-Length', '') or '-',
 			'f': request.headers.get('Referer', ''),
 			'a': request.headers.get('User-Agent', ''),
+			'H': request.headers.get('Host', ''),
 		}
 		for k, v in list(atoms.items()):
 			if isinstance(v, text_type):
@@ -62,11 +65,11 @@ class Logger(BaseComponent):
 			atoms[k] = v.replace('"', '\\"')
 
 		if self.logger is not None:
-			self.logger.info(self.format % atoms)
+			self.logger.info(self._logformat % atoms)
 		else:
-			self.file.write(self.format % atoms)
+			self.file.write(self._logformat % atoms)
 			self.file.write('\n')
 			self.file.flush()
 
 	def formattime(self):
-		return datetime.now().strftime('[%d/%b/%Y:%H:%M:%S]')
+		return datetime.now().strftime(self._timeformat)
