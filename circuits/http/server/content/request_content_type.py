@@ -7,6 +7,7 @@ from circuits import BaseComponent
 from circuits.http.utils import httphandler
 
 from httoop import BAD_REQUEST, UNSUPPORTED_MEDIA_TYPE, PAYLOAD_TOO_LARGE, DecodeError
+from httoop.header import Accept
 
 
 class RequestContentType(BaseComponent):
@@ -20,27 +21,24 @@ class RequestContentType(BaseComponent):
 
 	@httphandler('request', priority=0.55)
 	def decode_input_representation(self, client):
-
-		if client.request.method.safe and client.request.body:
-			# HTTP allows a GET / HEAD / ... request to have a request body
-			# but it doesn't make sense and potencially opens security issues, so deny it here
+		content_type = client.request.headers.element('Content-Type')
+		if not content_type and client.request.body:
+			raise UNSUPPORTED_MEDIA_TYPE('Missing Content-Type header in request.')
+		if client.request.method in (u'GET', u'HEAD') and client.request.body:
 			raise BAD_REQUEST('The request method is considered safe and cannot contain a request body.')
-
-		content_type = client.request.headers.get('Content-Type')
-		if not client.request.body:
-			if content_type:
-				raise BAD_REQUEST('Missing request body.')
+		if not content_type:
 			return
 
-		if not content_type:
-			raise BAD_REQUEST('Missing Content-Type header.')
-
-		handler = client.request.headers.element('Content-Type').codec
-		if not handler:
-			raise UNSUPPORTED_MEDIA_TYPE('The request Content-Type %r is not supported.' % client.request.headers['Content-Type'])
+		if content_type.mimetype not in client.method.request_content_types:
+			for mimetype, (codec, quality) in client.method.request_content_types.items():
+				accept = Accept(mimetype, {'q': quality})
+				client.response.headers.append('X-Supported-Media-Types', bytes(accept))
+			raise UNSUPPORTED_MEDIA_TYPE('The request Content-Type %r is not supported. Please use one of %r.' % (
+				client.request.headers['Content-Type'],
+				client.method.request_content_types.keys()
+			))
 
 		try:
-			body = client.request.body.read()  # FIXME: don't load into RAM
-			client.request.body.data = handler.decode(body)
+			client.method.decode(client)
 		except DecodeError:
 			raise BAD_REQUEST('Could not decode input representation.')

@@ -11,6 +11,9 @@ from httoop.codecs import Codec as _htCodec, lookup as codec_lookup
 
 
 def method(func=None, http_method=None):
+	if isinstance(func, (bytes, unicode)) and http_method is None:
+		http_method = func
+		func = None
 	def _decorator(method):
 		return Method(method, http_method or func.__name__)
 
@@ -19,7 +22,7 @@ def method(func=None, http_method=None):
 	return _decorator(func)
 
 
-class Method(object):
+class Method(object):  # TODO: minimize
 
 	@property
 	def available_mimetypes(self):
@@ -41,19 +44,32 @@ class Method(object):
 		self.method = method
 		self.safe = _htMethod(self.http_method).safe
 		self.idempotent = _htMethod(self.http_method).idempotent
+
 		self.content_types = {}
 		self.content_type_params = {}
+
+		self.request_content_types = {}
+		self.request_content_type_params = {}
+
 		self._resource = None
 		self._conditions = []
 
 	def __call__(self, client, *args, **kwargs):
 		if not allof(*self._conditions)(client):
 			raise FORBIDDEN()
-		return self.method(client.resource, client, *args, **kwargs)
+		return self.method(self.parent, client, *args, **kwargs)
 
 	def conditions(self, *conditions):
 		# TODO: make it possible to detect methods when using this as decorator (a function is passed)
 		self._conditions.extend(conditions)
+
+	def accept(self, mimetype, quality=1.0, **params):
+		mime_codec = codec_lookup(mimetype, raise_errors=False)
+		self.add_accept_codec(mime_codec, mimetype, quality, **params)
+		def _decorator(codec):
+			self.add_accept_codec(codec, mimetype, quality, **params)
+			return codec
+		return _decorator
 
 	def codec(self, mimetype, quality=1.0, **params):
 		"""Add a codec to the method. This method is eiter a decorator to add a function which acts as codec.
@@ -79,25 +95,45 @@ class Method(object):
 	def encode(self, client):
 		if 'Content-Type' not in client.response.headers:
 			return
-		mimetype = client.response.headers.element('Content-Type').mimetype
+		content_type = client.response.headers.element('Content-Type')
+		mimetype = content_type.mimetype
 		try:
 			codec, quality = client.method.content_types[mimetype]
 		except KeyError:
 			return
-		content_type = client.response.headers.element('Content-Type')
 		content_type.params.update(self.content_type_params[mimetype])
 		client.response.headers['Content-Type'] = bytes(content_type)
-		client.response.body = codec(client.resource, client)
+		client.response.body = codec(self.parent, client)
+
+	def decode(self, client):
+		if 'Content-Type' not in client.request.headers:
+			return
+		content_type = client.request.headers.element('Content-Type')
+		mimetype = content_type.mimetype
+		try:
+			codec, quality = client.method.request_content_types[mimetype]
+		except KeyError:
+			return
+		client.request.body.data = codec(self.parent, client)
 
 	def add_codec(self, codec, mimetype, quality, **params):
 		_codec = codec
 		if isinstance(codec, _htCodec) or isinstance(codec, type) and issubclass(codec, _htCodec):
 			def _codec(resource, client):
 				return codec.encode(client.data)
-				client.response.body.codec = codec
-				client.response.body.encode()
+				#client.response.body.codec = codec
+				#client.response.body.encode()
 		self.content_types[mimetype] = (_codec, quality)
 		self.content_type_params[mimetype] = params
+
+	def add_accept_codec(self, codec, mimetype, quality, **params):
+		_codec = codec
+		if isinstance(codec, _htCodec) or isinstance(codec, type) and issubclass(codec, _htCodec):
+			def _codec(resource, client):
+				body = client.request.body.read()  # FIXME: don't load into RAM
+				return codec.decode(body)
+		self.request_content_types[mimetype] = (_codec, quality)
+		self.request_content_type_params[mimetype] = params
 
 	def content_type_negotiation(self, client):
 		accepted_mimetypes = dict((e.value, e.quality) for e in client.request.headers.elements('Accept')) or {'*/*': 1}
