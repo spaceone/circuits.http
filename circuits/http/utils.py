@@ -27,17 +27,19 @@ def sets_header(header, ifmethod=None):
 	return _decorator
 
 
-def if_header_set(headers, ifmethod=None):
+def if_header_set(headers, ifmethod=None, with_event=False):
 	if not isinstance(ifmethod, (type(None), list, tuple)):
 		ifmethod = (ifmethod,)
 	if not isinstance(headers, (list, tuple)):
 		headers = (headers,)
 	def _decorator(func):
 		@wraps(func)
-		def _decorated(self, client, *args, **kwargs):
+		def _decorated(self, event, client, *args, **kwargs):
 			if ifmethod and client.request.method not in ifmethod:
 				return
 			if any(header in client.request.headers for header in headers):
+				if with_event:
+					return func(self, event, client, *args, **kwargs)
 				return func(self, client, *args, **kwargs)
 		return _decorated
 	return _decorator

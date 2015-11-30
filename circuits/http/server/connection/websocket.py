@@ -9,6 +9,7 @@ import base64
 from circuits import BaseComponent, handler
 from circuits.net.events import connect, disconnect
 from circuits.http.utils import if_header_set, httphandler
+from circuits.http.events import response as RE
 from circuits.protocols.websocket import WebSocketCodec
 
 from httoop import BAD_REQUEST
@@ -22,7 +23,7 @@ class Websocket(BaseComponent):
 		self._codecs = {}
 
 	@httphandler('request', priority=0.8)
-	@if_header_set('Upgrade')
+	@if_header_set('Upgrade', with_event=True)
 	def _on_request(self, event, client):
 
 		request, response = client
@@ -63,14 +64,16 @@ class Websocket(BaseComponent):
 		response.headers['Upgrade'] = 'WebSocket'
 		response.headers['Connection'] = 'Upgrade'
 		response.headers['Sec-WebSocket-Accept'] = accept
+		response.headers['Sec-WebSocket-Protocol'] = request.headers.elements('Sec-WebSocket-Protocol')[0]
 		response.body = ['WebSocket Protocol Handshake']
 
 		codec = WebSocketCodec(client.socket, channel=self._wschannel)
-		codec.register(self)
+		codec.register(client.server.socket)
 		self._codecs[client.socket] = codec
 		client.wscodec = codec
 		event.complete = True  # TODO: can we modify it in this way?
 		event.stop()
+		self.fire(RE(client), client.server.channel)
 		return response
 
 	@handler('response_complete')

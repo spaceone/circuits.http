@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 from circuits import BaseComponent
 from circuits.http.utils import sets_header, if_header_set, httphandler
 
-from httoop import InvalidDate, NOT_MODIFIED, BAD_REQUEST, PRECONDITION_FAILED
+from httoop import Date, InvalidDate, NOT_MODIFIED, BAD_REQUEST, PRECONDITION_FAILED
 
 
 class LastModified(BaseComponent):
@@ -15,7 +15,10 @@ class LastModified(BaseComponent):
 	@sets_header('Last-Modified')
 	def _last_modified_header(self, client):
 		if hasattr(client.resource, 'last_modified'):
-			return client.resource.last_modified(client)
+			last_modified = client.resource.last_modified(client)
+			if not isinstance(last_modified, (type(None), Date)):
+				last_modified = Date(last_modified)
+			return last_modified
 
 	@httphandler('request', priority=0.6909)
 	@if_header_set('If-Modified-Since', ifmethod=('GET', 'HEAD'))

@@ -11,7 +11,7 @@ from circuits.http.server.resource.resource import Resource
 from circuits.http.server.resource.method import method
 from circuits.http.utils import httphandler
 
-from httoop import FORBIDDEN, NOT_FOUND, Date
+from httoop import FORBIDDEN, NOT_FOUND
 
 try:
 	import magic
@@ -57,7 +57,7 @@ class StaticResource(Resource):
 
 	def last_modified(self, client):
 		try:
-			return Date(os.stat(client.response.body.name).st_mtime)
+			return os.stat(client.response.body.name).st_mtime
 		except (IOError, OSError):
 			pass
 

@@ -32,7 +32,7 @@ class StateMachine(ServerStateMachine):
 
 class State(object):
 
-	__slots__ = ('http', 'parser', 'requests', 'responses', 'response_started', 'composed', 'timeout')
+	__slots__ = ('http', 'parser', 'requests', 'responses', 'response_started', 'composed', 'timeout', 'tunnel')
 
 	def __init__(self, http, client, server):
 		self.parser = StateMachine(http, client, server, server.scheme, server.host, server.port)
@@ -41,3 +41,4 @@ class State(object):
 		self.response_started = set()
 		self.composed = {}
 		self.timeout = None
+		self.tunnel = None

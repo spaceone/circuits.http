@@ -29,8 +29,8 @@ class Resource(BaseComponent):
 
 	path = None
 
-	def __init__(self, channel=None):
-		super(Resource, self).__init__(channel=channel or self.channel)
+	def __init__(self, *args, **kwargs):
+		super(Resource, self).__init__(*args, channel=kwargs.pop('channel', self.channel), **kwargs)
 		self.path = self.path or self.channel
 		self.methods = dict()
 		self.routes = set()

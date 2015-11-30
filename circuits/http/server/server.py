@@ -84,6 +84,8 @@ class HTTP(BaseComponent):
 			# FIXME: does not exists yet on "connect"
 			return  # disconnected
 
+		if state.tunnel:
+			return
 		timeout = state.timeout
 		if timeout is not None:
 			timeout.abort = True
@@ -95,7 +97,7 @@ class HTTP(BaseComponent):
 
 		yield timeout
 
-		if timeout.abort:
+		if timeout.abort or state.tunnel:
 			return
 		if all(client.done for client in state.requests):
 			self.fire(close(socket))
@@ -137,6 +139,8 @@ class HTTP(BaseComponent):
 			return
 
 		state.response_started.add(client)
+		if client.response.status == 101:
+			state.tunnel = True
 
 		# prepare for sending
 		composed = ComposedResponse(response, request)
