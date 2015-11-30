@@ -1,3 +1,7 @@
+#!/usr/bin/env python2
+"""
+curl -i http://localhost:8090/graph
+"""
 import sys
 sys.path.insert(0, '.')
 from datetime import datetime
@@ -12,10 +16,8 @@ class BaseResource(Resource):
 
 	@method
 	def GET(self, client):
-		client.response.body = graph(self.root) + '\n'
-
-	def content_type(self, client):
-		return 'text/plain'
+		return graph(self.root) + '\n'
+	GET.codec('text/plain')
 
 	def etag(self, client):
 		return bytes(hash(self))

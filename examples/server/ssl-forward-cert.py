@@ -19,7 +19,7 @@ class SSLSocket(TCPServer):
 			secure=True,
 			certfile="./ssl/server-cert.pem",
 			keyfile="./ssl/server-key.pem",
-			ca_certs=["./ssl/ca-chain.pem"],
+			ca_certs="./ssl/ca-chain.pem",
 			cert_reqs=CERT_OPTIONAL,
 			channel=channel,
 		)
@@ -31,7 +31,7 @@ class PeerCert(Resource):
 
 	@method
 	def GET(self, client):
-		return "Here's your cert %s" % client.ssl.cert
+		return "You are providing the following cert: %s" % (client.ssl.cert,)
 	GET.codec('application/json')
 
 

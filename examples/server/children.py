@@ -1,6 +1,11 @@
 #!/usr/bin/env python2
-# show parent-children relationship
-# curl -i http://localhost:8090/forum/foo/threads/blub
+"""Show parent-children relationship.
+
+curl -i http://localhost:8090/forum
+curl -i http://localhost:8090/forum/foo
+curl -i http://localhost:8090/forum/foo/threads
+curl -i http://localhost:8090/forum/foo/threads/bar
+"""
 import sys
 sys.path.insert(0, '.')
 
@@ -19,7 +24,8 @@ class ForumIndex(Resource):
 
 	@method
 	def GET(self, client):
-		client.response.body = 'Forum-index'
+		return u'Forum-index\n'
+	GET.codec('text/plain', charset='UTF-8')
 
 
 class Forum(Resource):
@@ -31,7 +37,8 @@ class Forum(Resource):
 
 	@method
 	def GET(self, client):
-		client.response.body = 'Forum=%s' % (client.path_segments['forum'],)
+		return u'Forum=%s\n' % (client.path_segments['forum'],)
+	GET.codec('text/plain', charset='UTF-8')
 
 
 class ThreadIndex(Resource):
@@ -43,7 +50,8 @@ class ThreadIndex(Resource):
 
 	@method
 	def GET(self, client):
-		client.response.body = 'Threads in forum %s' % (client.path_segments['forum'],)
+		return u'Threads in forum %s\n' % (client.path_segments['forum'],)
+	GET.codec('text/plain', charset='UTF-8')
 
 
 class Thread(Resource):
@@ -52,10 +60,12 @@ class Thread(Resource):
 
 	@method
 	def GET(self, client):
-		client.response.body = 'Forum: %s, Thread: %s' % (
+		return u'Forum: %s, Thread: %s\n' % (
 			client.path_segments['forum'],
 			client.path_segments['thread'],
 		)
+	GET.codec('text/plain', charset='UTF-8')
+
 
 if __name__ == '__main__':
 	server = HTTPServer()

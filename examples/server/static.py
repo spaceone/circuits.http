@@ -1,3 +1,11 @@
+#!/usr/bin/env python2
+"""Serve static content underneath of /etc/.
+
+curl -i http://localhost:8090/passwd
+curl -i http://localhost:8090/shadow
+
+"""
+
 import sys
 sys.path.insert(0, '.')
 from datetime import datetime
