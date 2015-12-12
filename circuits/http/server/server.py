@@ -296,7 +296,7 @@ class HTTP(BaseComponent):
 	@handler("exception")
 	def _on_exception(self, *args, **kwargs):
 		fevent = kwargs['fevent']
-		if isinstance(fevent, read):
+		if isinstance(fevent, read) or fevent.name == '_read':
 			socket = fevent.args[0]
 			self.fire(close(socket))
 		elif isinstance(fevent, (RequestEvent, ResponseEvent, HTTPError)):
@@ -340,6 +340,7 @@ class HTTP(BaseComponent):
 
 	@handler('error')
 	def _on_socket_error(self, socket, error):
+		print('SocketError: %r: %s' % (socket, error))
 		if isinstance(error, SSLError):
 			if error.errno == 1 and getattr(error, 'reason', None) == 'HTTP_REQUEST' or error.strerror.endswith(':http request'):
 				self.http_through_ssl(socket)
@@ -361,6 +362,9 @@ Instead use the HTTPS scheme to access this URL, please: https://%s"""))  # TODO
 		parser = self._buffers[socket].parser.parse
 		def parse(data):
 			# TODO: if we have a socket with TLS support we should try to use it instead so that we can speak HTTPS and redirect to the other port.
+			#self.fire(write(socket, b'\x15\x03\x01\x00\x02\x02('))
+			self.fire(write(socket, b'\x15\x03\x01\x00\x02\x02G'))
+			#self.fire(write(socket, b'<html><head><title>use plaintext HTTP</title></head><body></body>USE HTTP!</html>'))
 			self.fire(close(socket))
 			return parser('')
 		self._buffers[socket].parser.parse = parse

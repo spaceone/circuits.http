@@ -8,7 +8,7 @@ from circuits.http.utils import httphandler
 from circuits.http.events import routing
 from circuits.http.server.resource import Domain
 
-from httoop import MOVED_PERMANENTLY, BAD_REQUEST
+from httoop import MOVED_PERMANENTLY, BAD_REQUEST, URI
 from httoop.header import Host
 
 
@@ -54,8 +54,8 @@ class DomainRouter(BaseComponent):
 				return self.redirect_alias(domain, client)
 
 	def redirect_alias(self, domain, client):
-		path = domain.url(client, *client.request.uri.path_segments)
-		path.query = {}  # TODO: check if we MUST leave out querystring
+		path = URI(client.request.uri)
+		path.host = domain.fqdn
 		raise MOVED_PERMANENTLY(path)
 
 	@httphandler('routing', priority=-0.11)

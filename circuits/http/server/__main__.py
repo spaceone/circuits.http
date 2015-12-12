@@ -132,7 +132,7 @@ class HTTPServer(BaseComponent):
 		try:
 			self.http += SocketType(bind, channel=self.http.channel, **kwargs)
 		except RuntimeError as exc:
-			self.exit('Could not create socket for URI "%s": %s. Further socket options can be specified via the query string.' % (uri.uri, exc,))
+			self.exit('Could not create socket for URI "%s": %s. Further socket options can be specified via the query string.' % (uri, exc,))
 		except SocketError as exc:
 			self.exit('Could not create socket %s: %s.' % (bind, exc))
 
