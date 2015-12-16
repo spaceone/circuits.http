@@ -3,10 +3,12 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
 
+import sys
 from time import time
 from ssl import SSLError
-from traceback import format_tb
+from traceback import format_tb, format_exception, format_exc
 
 from circuits import BaseComponent, handler, reprhandler, Event
 from circuits.net.utils import is_ssl_handshake
@@ -15,7 +17,7 @@ from circuits.http.wrapper import Client, Server
 from circuits.http.events import HTTPError, request as RequestEvent, response as ResponseEvent, routing as RoutingEvent
 from circuits.http.server._state import State
 
-from httoop import StatusException, INTERNAL_SERVER_ERROR, Response
+from httoop import StatusException, INTERNAL_SERVER_ERROR, Request, Response
 from httoop.semantic.response import ComposedResponse
 
 _ResponseStart = type(b'response.start', (Event,), {})
@@ -57,6 +59,11 @@ class HTTP(BaseComponent):
 			self._add_client(client)
 			self.fire(HTTPError(client, httperror))
 			# TODO: wait for HTTPError event to be processed and close the connection
+		except:
+			client = Client(Request(), Response(), socket, server)
+			self._add_client(client)
+			self.fire(self.default_internal_server_error(client, sys.exc_info()))
+			raise
 		else:
 			for client in requests:
 				self._add_client(client)
@@ -165,7 +172,7 @@ class HTTP(BaseComponent):
 			data = next(response.body)
 		except StopIteration:
 			response.body.close()
-			#if response.close:
+			#if response.close:  # conflicts with pipelining?
 			#	self.fire(close(socket))
 			client.done = True
 			self.fire(_ResponseComplete(client))
@@ -286,20 +293,26 @@ class HTTP(BaseComponent):
 			return
 		if client in state.responses:
 			return
-		self.fire(write(socket, self.default_internal_server_error(client, error)))
+		print('Exception in httperror_failure: %s, %r' % (error, client))
+		self.default_internal_server_error(client, error)
+		self.fire(write(socket, bytes(client.response)))
+		self.fire(write(socket, bytes(client.response.headers)))
+		self.fire(write(socket, bytes(client.response.body)))
 		self.fire(close(socket))
 
 	def default_internal_server_error(self, client, error):
-		print('Exception in httperror_failure: %s, %r' % (error, client))
-		return b'%s\r\n' % (Response(status=500),)
+		client.request = Request()
+		client.response = Response(status=500)
+		client.response.headers['Content-Length'] = bytes(len(client.response.body))
+		return HTTPError(client, INTERNAL_SERVER_ERROR())
 
 	@handler("exception")
 	def _on_exception(self, *args, **kwargs):
 		fevent = kwargs['fevent']
-		if isinstance(fevent, read) or fevent.name == '_read':
+		if fevent.name == '_read':
 			socket = fevent.args[0]
 			self.fire(close(socket))
-		elif isinstance(fevent, (RequestEvent, ResponseEvent, HTTPError)):
+		elif isinstance(fevent, (read, RequestEvent, ResponseEvent, HTTPError)):
 			pass # already handled
 		elif fevent.name == 'response.body':
 			socket = fevent.args[0].socket
