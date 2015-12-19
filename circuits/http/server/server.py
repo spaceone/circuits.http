@@ -48,7 +48,11 @@ class HTTP(BaseComponent):
 		if socket not in self._buffers:
 			self._buffers[socket] = State(self, socket, server)
 			if not server.secure and is_ssl_handshake(data):
-				self.ssl_through_http(socket)
+				if self.ssl_through_http(socket) is NotImplemented:
+					return
+
+		if self._buffers[socket].tunnel:
+			return  # TODO: find a circuits way for this
 
 		http = self._buffers[socket].parser
 
@@ -146,7 +150,7 @@ class HTTP(BaseComponent):
 			return
 
 		state.response_started.add(client)
-		if client.response.status == 101:
+		if client.response.status == 101 or client.request.method == u'CONNECT' and client.response.status.successful:
 			state.tunnel = True
 
 		# prepare for sending
