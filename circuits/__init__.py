@@ -9,6 +9,6 @@ except ImportError:
 		_path = os.path.join(_path, '__init__.py')
 		if os.path.realpath(_path) != os.path.realpath(__file__) and os.path.exists(_path):
 			with open(_path) as fd:
-				exec fd in globals()
+				exec(fd, globals())
 		del _path
 	del os, extend_path, fd
