@@ -33,6 +33,7 @@ class Websocket(BaseComponent):
 			return
 
 		sec_key = headers.get('Sec-WebSocket-Key', '').encode('utf-8')
+		subprotocols = headers.elements("Sec-WebSocket-Protocol")
 		connection_tokens = [str(t.value).lower() for t in headers.elements('Connection')]
 
 		def _valid_websocket_request():
@@ -65,6 +66,8 @@ class Websocket(BaseComponent):
 		response.headers['Connection'] = 'Upgrade'
 		response.headers['Sec-WebSocket-Accept'] = accept
 		response.headers['Sec-WebSocket-Protocol'] = request.headers.elements('Sec-WebSocket-Protocol')[0]
+		if subprotocols:
+			response.headers["Sec-WebSocket-Protocol"] = self.select_subprotocol(subprotocols)
 		response.body = ['WebSocket Protocol Handshake']
 
 		codec = WebSocketCodec(client.socket, channel=self._wschannel)
@@ -75,6 +78,9 @@ class Websocket(BaseComponent):
 		event.stop()
 		self.fire(RE(client), client.server.channel)
 		return response
+
+	def select_subprotocol(self, subprotocols):
+		return subprotocols[0]
 
 	@handler('response_complete')
 	def _websocket_connect(self, evt, value):
