@@ -78,7 +78,7 @@ class Resource(BaseComponent):
 		if client.method is not None:
 			return
 
-		allow = ', '.join(self.allowed_methods)
+		allow = u', '.join(self.allowed_methods)
 		if client.request.method in self.supported_methods:
 			raise METHOD_NOT_ALLOWED(allow, 'The specified method is invalid for this resource. Allowed methods are %s' % allow)
 		raise NOT_IMPLEMENTED('The requested method is not implemented', headers=dict(Allow=allow))

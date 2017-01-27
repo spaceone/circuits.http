@@ -65,14 +65,14 @@ class StaticResource(Resource):
 		if client.request.method != 'GET':
 			return super(StaticResource, self).content_type(client)
 
-		mimetype, acceptable = None, set(['*', '*/*'])
+		mimetype, acceptable = None, set([u'*', u'*/*'])
 		accept = set(client.request.headers.values('Accept'))
 		_, ext = os.path.splitext(client.filename)
 		if ext:
 			mimetype = mimetypes.types_map.get(ext)
 			if mimetype:
 				acceptable.add(mimetype)
-				acceptable.add('%s/*' % mimetype.split('/', 1)[0])
+				acceptable.add(u'%s/*' % mimetype.split(u'/', 1)[0])
 		if not mimetype:
 			if hasattr(magic, 'from_file'):
 				mimetype = magic.from_file(client.filename, mime=True)

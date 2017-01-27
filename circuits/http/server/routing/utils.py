@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# TODO: decide if this is a byte or unicode API
 
 import re
 

@@ -29,16 +29,15 @@ class Websocket(BaseComponent):
 		request, response = client
 		headers = request.headers
 
-		if headers['Upgrade'].lower() != 'websocket':  # TODO: could be moved to httoop
+		if not headers.element('Upgrade').websocket:
 			return
 
-		sec_key = headers.get('Sec-WebSocket-Key', '').encode('utf-8')
+		sec_key = headers.get('Sec-WebSocket-Key', u'').encode('utf-8')
 		subprotocols = headers.elements("Sec-WebSocket-Protocol")
-		connection_tokens = [str(t.value).lower() for t in headers.elements('Connection')]
 
 		def _valid_websocket_request():
 			yield 'Host' in headers
-			yield 'upgrade' in connection_tokens
+			yield any(x.upgrade for x in headers.elements('Connection'))
 			yield bool(sec_key)
 			try:
 				yield len(base64.b64decode(sec_key)) == 16
@@ -55,7 +54,7 @@ class Websocket(BaseComponent):
 
 		# Generate accept header information
 		msg = b'%s258EAFA5-E914-47DA-95CA-C5AB0DC85B11' % (sec_key,)
-		accept = base64.b64encode(hashlib.sha1(msg).digest()).decode()
+		accept = base64.b64encode(hashlib.sha1(msg).digest()).decode('ascii')
 
 		# Successful completion
 		response.status = 101
@@ -65,7 +64,6 @@ class Websocket(BaseComponent):
 		response.headers['Upgrade'] = 'WebSocket'
 		response.headers['Connection'] = 'Upgrade'
 		response.headers['Sec-WebSocket-Accept'] = accept
-		response.headers['Sec-WebSocket-Protocol'] = request.headers.elements('Sec-WebSocket-Protocol')[0]
 		if subprotocols:
 			response.headers["Sec-WebSocket-Protocol"] = self.select_subprotocol(subprotocols)
 		response.body = ['WebSocket Protocol Handshake']

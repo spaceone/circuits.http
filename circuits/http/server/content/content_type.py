@@ -23,5 +23,5 @@ class ContentType(BaseComponent):
 		if 'Content-Type' not in client.response.headers:
 			for mimetype, (codec, quality) in client.method.content_types.items():
 				accept = Accept(mimetype, {'q': quality})
-				client.response.headers.append('Accept', bytes(accept))
+				client.response.headers.append('Accept', bytes(accept))  # TODO: python3
 			raise NOT_ACCEPTABLE('Available Content-Types are %r.' % (client.method.content_types.keys(),))

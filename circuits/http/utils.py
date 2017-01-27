@@ -130,5 +130,5 @@ def from_hostname(*hostnames):
 def is_https():
 	"""Returns True if the connection is secured"""
 	def condition(client):
-		return client.request.uri.scheme == 'https'
+		return client.request.uri.scheme == u'https'
 	return condition

@@ -125,6 +125,6 @@ class CookieStorage(BaseComponent):
 		if domain == cookie_domain:
 			return True
 		# FIXME: this currently allows ".com"
-		if cookie_domain.startswith('.') and domain.endswith(cookie_domain):
+		if cookie_domain.startswith(u'.') and domain.endswith(cookie_domain):
 			return True
 		# TODO: substring

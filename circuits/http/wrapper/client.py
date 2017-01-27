@@ -2,7 +2,6 @@
 """Client class which provides request, response and socket information"""
 
 from __future__ import absolute_import
-from __future__ import unicode_literals
 
 from circuits.http.wrapper.host import Host
 from circuits.http.wrapper.ssl import SSL
@@ -13,8 +12,8 @@ class Client(object):
 	server = None  # reference to the server
 	socket = None  # reference to the connected client socket
 
-	local = Host("127.0.0.1", 80)
-	remote = Host("", 0)
+	local = Host(u"127.0.0.1", 80)
+	remote = Host(u"", 0)
 	ssl = SSL()
 
 	# TODO: how can we get rid of this? (belongs somewhere else)
@@ -58,11 +57,11 @@ class Client(object):
 			))
 			self.remote.resolve()  # TODO: resolve only when accessed?
 
-		self.events = type(b'events', (object,), {
-			b'routing': None,
-			b'authentication': None,
-			b'request': None,
-			b'response': None
+		self.events = type('events', (object,), {
+			'routing': None,
+			'authentication': None,
+			'request': None,
+			'response': None
 		})()
 
 #	def url(self, *path, **query):

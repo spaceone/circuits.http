@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-from __future__ import unicode_literals
 
 from circuits import BaseComponent
 from circuits.http.utils import allof
@@ -34,7 +33,7 @@ class Method(object):  # TODO: minimize
 
 	@resource.setter
 	def resource(self, resource):
-		self.__class__ = type(b'Method', (type(self), BaseComponent), {})
+		self.__class__ = type('Method', (type(self), BaseComponent), {})
 		BaseComponent.__init__(self, channel=resource.channel)
 		self.register(resource)
 		#self._resource = resource  # FIXME: recursion error: circuits trys to register instance members which are components
@@ -102,7 +101,7 @@ class Method(object):  # TODO: minimize
 		except KeyError:
 			return
 		content_type.params.update(self.content_type_params[mimetype])
-		client.response.headers['Content-Type'] = bytes(content_type)
+		client.response.headers['Content-Type'] = bytes(content_type)  # FIXME: python3
 		client.response.body = codec(self.parent, client)
 
 	def decode(self, client):
@@ -136,7 +135,7 @@ class Method(object):  # TODO: minimize
 		self.request_content_type_params[mimetype] = params
 
 	def content_type_negotiation(self, client):
-		accepted_mimetypes = dict((e.value, e.quality) for e in client.request.headers.elements('Accept')) or {'*/*': 1}
+		accepted_mimetypes = dict((e.value, e.quality) for e in client.request.headers.elements('Accept')) or {u'*/*': 1}
 		available_mimetypes = client.method.available_mimetypes
 		if not available_mimetypes:
 			return
@@ -144,11 +143,11 @@ class Method(object):  # TODO: minimize
 			if accepted_mimetypes.get(mimetype):
 				return mimetype
 		for accepted in accepted_mimetypes:
-			if accepted in ('*', '*/*'):
+			if accepted in (u'*', u'*/*'):
 				for available in available_mimetypes:
 					if accepted_mimetypes.get(available, 1):
 						return available
-			if accepted.endswith('/*'):
+			if accepted.endswith(u'/*'):
 				for mimetype in available_mimetypes:
 					if mimetype.startswith(accepted[:-1]) and accepted_mimetypes.get(mimetype, 1):
 						return mimetype

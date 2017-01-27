@@ -32,7 +32,7 @@ class RequestContentType(BaseComponent):
 		if content_type.mimetype not in client.method.request_content_types:
 			for mimetype, (codec, quality) in client.method.request_content_types.items():
 				accept = Accept(mimetype, {'q': quality})
-				client.response.headers.append('X-Supported-Media-Types', bytes(accept))
+				client.response.headers.append('X-Supported-Media-Types', bytes(accept))  # TODO: python3
 			raise UNSUPPORTED_MEDIA_TYPE('The request Content-Type %r is not supported. Please use one of %r.' % (
 				client.request.headers['Content-Type'],
 				client.method.request_content_types.keys()

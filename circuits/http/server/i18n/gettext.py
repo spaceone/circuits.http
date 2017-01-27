@@ -11,9 +11,9 @@ from httoop import NOT_ACCEPTABLE
 
 class GettextResource(object):
 
-	_default_language = 'en-us'
+	_default_language = u'en-us'
 	_fallback = True
-	RE_LANG = re.compile('^([a-z][a-z])-([a-z][a-z])$')
+	RE_LANG = re.compile(u'^([a-z][a-z])-([a-z][a-z])$')
 
 	def content_language(self, client):
 		localedir = client.domain.localedir

@@ -92,6 +92,6 @@ class HTTPClient(BaseComponent):
 
 	@handler("response")
 	def _on_response(self, client):
-		if client.response.headers.get("Connection") == "close":  # TODO: ParsedResponse(response).close
+		if client.response.headers.element("Connection").close:  # TODO: ParsedResponse(response).close
 			self.fire(close(), client.socket)
 		return client

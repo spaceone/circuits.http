@@ -28,8 +28,8 @@ class Logger(BaseComponent):
 			self.file = sys.stdout
 
 		self.logger = logger
-		self._logformat = logformat
-		self._timeformat = timeformat
+		self._logformat = str(logformat)
+		self._timeformat = str(timeformat)
 
 	@handler('response.complete', priority=-0.1)
 	def response(self, client):
@@ -54,9 +54,9 @@ class Logger(BaseComponent):
 			'H': request.headers.get('Host', ''),
 		}
 		for k, v in list(atoms.items()):
-			if isinstance(v, text_type):
-				v = v.encode('utf8')
-			elif not isinstance(v, str):
+			if not isinstance(v, str):
+				if isinstance(v, text_type):
+					v = v.encode('utf8')
 				v = str(v)
 			# Fortunately, repr(str) escapes unprintable chars, \n, \t, etc
 			# and backslash for us. All we have to do is strip the quotes.

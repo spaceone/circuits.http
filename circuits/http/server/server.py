@@ -2,7 +2,6 @@
 """HTTP server"""
 
 from __future__ import absolute_import
-from __future__ import unicode_literals
 from __future__ import print_function
 
 import sys
@@ -81,7 +80,7 @@ class HTTP(BaseComponent):
 
 	@handler('read', 'connect', priority=-0.1)
 	def _timeout(self, *args):
-		self.fire(Event.create(b'timeout.check', args[0]))
+		self.fire(Event.create('timeout.check', args[0]))
 
 	@handler('timeout.check')
 	def _check_timeout(self, socket):
@@ -233,7 +232,7 @@ class HTTP(BaseComponent):
 
 		# fire httperror_XXX event
 #		channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
-		event = Event.create(b'httperror_%d' % (httperror.status,))
+		event = Event.create('httperror_%d' % (httperror.status,))
 		self.fire(event, *event.channels)
 
 	@handler("httperror_success")
@@ -333,6 +332,7 @@ class HTTP(BaseComponent):
 		if not socket:
 			# server socket was closed
 			return
+		socket.close()
 		self._remove_client(socket)
 
 	def _remove_client(self, socket):
@@ -349,10 +349,10 @@ class HTTP(BaseComponent):
 	def _handle_exception(self, client, error):
 		etype, httperror, traceback = error
 		if not isinstance(httperror, StatusException):
-			httperror = INTERNAL_SERVER_ERROR('%s (%s)' % (etype.__name__, httperror))
+			httperror = INTERNAL_SERVER_ERROR(u'%s (%s)' % (etype.__name__, httperror))
 		if not isinstance(traceback, (list, tuple)):
 			traceback = format_tb(traceback)
-		httperror.traceback = ''.join(traceback)
+		httperror.traceback = u''.join(traceback)
 		self.fire(HTTPError(client, httperror))
 
 	@handler('error')
@@ -383,5 +383,5 @@ Instead use the HTTPS scheme to access this URL, please: https://%s"""))  # TODO
 			self.fire(write(socket, b'\x15\x03\x01\x00\x02\x02G'))
 			#self.fire(write(socket, b'<html><head><title>use plaintext HTTP</title></head><body></body>USE HTTP!</html>'))
 			self.fire(close(socket))
-			return parser('')
+			return parser(b'')
 		self._buffers[socket].parser.parse = parse

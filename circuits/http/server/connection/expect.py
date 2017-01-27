@@ -24,7 +24,7 @@ class ExpectContinue(object):
 
 	def expect(self, client):
 		for expect in client.request.headers.elements('Expect'):
-			if expect.lower() == '100-continue':
+			if expect.is_100_continue:
 				if not self.expect_continue(client):
 					raise EXPECTATION_FAILED()
 				data = Response(status=CONTINUE().code)
