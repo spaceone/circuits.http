@@ -61,24 +61,30 @@ class HTTPServer(BaseComponent):
 
 		add('-b', '--bind', metavar='URI', action='append', default=[])
 
-		add('-n', '--no-daemon', default=True, dest='daemonize', action='store_false',
+		add(
+			'-n', '--no-daemon', default=True, dest='daemonize', action='store_false',
 			help="don't daemonize. The process will not fork into background")
 
-		add('-p', '--pid', default='/var/run/%s.pid' % (__name__,), dest='pidfile',
+		add(
+			'-p', '--pid', default='/var/run/%s.pid' % (__name__,), dest='pidfile',
 			help='The process id file which is required when running as daemon')
 
-		add('-u', '--user', default=None,
+		add(
+			'-u', '--user', default=None,
 			help='the username or user id to run the process as. Only possible if run as root.')
 
-		add('-g', '--group', default=None,
+		add(
+			'-g', '--group', default=None,
 			help='the groupname or group id to run the proccess as. Only possible if run as root.')
 
-		add('--umask', type=int,
+		add(
+			'--umask', type=int,
 			help='the umask this process should run as if dropping priviledges')
 
 		add('-l', '--logfile', default=sys.stdout, dest='logfile', help='the logfile')
 
-		add('-d', '--debug', type=int, default=0, dest='loglevel',
+		add(
+			'-d', '--debug', type=int, default=0, dest='loglevel',
 			help='the loglevel as string or int (default: %(default)s)')
 
 	def parse_arguments(self, args):

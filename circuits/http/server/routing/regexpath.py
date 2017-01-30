@@ -64,4 +64,4 @@ class RegexPathRouter(Router):
 			parent = parent.parent
 		path.insert(0, '')
 		path.append(resource.path.lstrip('/'))
-		return b'/'.join(path)  #FIXME: python3
+		return b'/'.join(path)  # FIXME: python3

@@ -13,6 +13,7 @@ def method(func=None, http_method=None):
 	if isinstance(func, (bytes, unicode)) and http_method is None:
 		http_method = func
 		func = None
+
 	def _decorator(method):
 		return Method(method, http_method or func.__name__)
 
@@ -65,6 +66,7 @@ class Method(object):  # TODO: minimize
 	def accept(self, mimetype, quality=1.0, **params):
 		mime_codec = codec_lookup(mimetype, raise_errors=False)
 		self.add_accept_codec(mime_codec, mimetype, quality, **params)
+
 		def _decorator(codec):
 			self.add_accept_codec(codec, mimetype, quality, **params)
 			return codec
@@ -86,6 +88,7 @@ class Method(object):  # TODO: minimize
 		"""
 		mime_codec = codec_lookup(mimetype, raise_errors=False)
 		self.add_codec(mime_codec, mimetype, quality, **params)
+
 		def _decorator(codec):
 			self.add_codec(codec, mimetype, quality, **params)
 			return codec

@@ -7,7 +7,7 @@ from __future__ import print_function
 import sys
 from time import time
 from ssl import SSLError
-from traceback import format_tb, format_exception, format_exc
+from traceback import format_tb
 
 from circuits import BaseComponent, handler, reprhandler, Event
 from circuits.net.utils import is_ssl_handshake
@@ -316,7 +316,7 @@ class HTTP(BaseComponent):
 			socket = fevent.args[0]
 			self.fire(close(socket))
 		elif isinstance(fevent, (read, RequestEvent, ResponseEvent, HTTPError)):
-			pass # already handled
+			pass  # already handled
 		elif fevent.name == 'response.body':
 			socket = fevent.args[0].socket
 			self.fire(close(socket))
@@ -377,6 +377,7 @@ Instead use the HTTPS scheme to access this URL, please: https://%s"""))  # TODO
 		# and we're not a secure server, then immediately close the
 		# client connection since we can't respond to it anyway.
 		parser = self._buffers[socket].parser.parse
+
 		def parse(data):
 			# TODO: if we have a socket with TLS support we should try to use it instead so that we can speak HTTPS and redirect to the other port.
 			#self.fire(write(socket, b'\x15\x03\x01\x00\x02\x02('))

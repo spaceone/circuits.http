@@ -48,7 +48,8 @@ class CookieStorage(BaseComponent):
 	def _on_response(self, client):
 		for cookie in client.response.headers.elements('Set-Cookie'):
 			now = time()
-			cookie = Cookie(cookie.cookie_name, cookie.cookie_value, client.request.uri.host,
+			cookie = Cookie(
+				cookie.cookie_name, cookie.cookie_value, client.request.uri.host,
 				domain=cookie.domain,
 				path=cookie.path,
 				max_age=cookie.max_age,

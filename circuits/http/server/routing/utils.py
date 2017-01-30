@@ -67,6 +67,8 @@ def tokenize(path):
 	elif current:
 		regparts.append(_append(current))
 	return regparts
+
+
 tokenize.defaults = {
 	':': '[^/]+?',
 	'.': '[^/.]+?',

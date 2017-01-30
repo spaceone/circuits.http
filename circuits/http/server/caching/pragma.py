@@ -14,4 +14,3 @@ class Pragma(BaseComponent):
 	def set_pragma_header(self, client):
 		if hasattr(client.resource, 'pragma'):
 			return client.resource.pragma(client)
-
