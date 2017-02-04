@@ -12,7 +12,7 @@ from circuits.http.utils import if_header_set, httphandler
 from circuits.http.events import response as RE
 from circuits.protocols.websocket import WebSocketCodec
 
-from httoop import BAD_REQUEST
+from httoop import BAD_REQUEST, SWITCHING_PROTOCOLS
 
 
 class Websocket(BaseComponent):
@@ -57,7 +57,7 @@ class Websocket(BaseComponent):
 		accept = base64.b64encode(hashlib.sha1(msg).digest()).decode('ascii')
 
 		# Successful completion
-		response.status = 101
+		response.status = SWITCHING_PROTOCOLS().code
 		response.close = False  # FIXME: remove this connection from HTTP component
 		# TODO: logic should be handled by httoop
 		response.headers.pop('Content-Type', None)
