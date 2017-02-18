@@ -156,7 +156,7 @@ class Method(object):  # TODO: minimize
 						return mimetype
 
 	def content_language_negotiation(self, client):
-		return
+		return ''
 
 	@classmethod
 	def is_method(cls, member):

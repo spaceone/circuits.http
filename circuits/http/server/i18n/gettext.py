@@ -8,12 +8,18 @@ import gettext
 
 from httoop import NOT_ACCEPTABLE
 
+from circuits.http.utils import httphandler
+
 
 class GettextResource(object):
 
-	_default_language = u'en-us'
-	_fallback = True
-	RE_LANG = re.compile(u'^([a-z][a-z])-([a-z][a-z])$')
+	default_languages = [u'en-US']
+	fallback = True
+	RE_LANG = re.compile(u'^([a-z][a-z])-([a-z][a-z])$', re.I)
+
+	@httphandler('request', priority=1.0)
+	def _set_null_translation(self, client):
+		client.translation = gettext.NullTranslations()
 
 	def content_language(self, client):
 		localedir = client.domain.localedir
@@ -21,26 +27,24 @@ class GettextResource(object):
 		languages = client.request.headers.values('Accept-Language')
 
 		translation = self.__get_translation(languages, textdomain, localedir)
+		if not translation:
+			return
 
-		# Accept-Language is acceptable?
-		if translation is None:
-			raise NOT_ACCEPTABLE('The resource is not available in the requested Content-Language.')
-
-		client.translation = translation.gettext
-		return translation.language
+		client.translation = translation
+		translation._info.setdefault('language', '')
+		return translation._info['language'].replace('_', '-')
 
 	def __get_translation(self, languages, domain, localedir):
-		for lang in languages:
-			language = lang
+		for language in languages:
+			locale = language
 			if '-' in language:
 				# de-de → de_DE
-				language = self.RE_LANG.sub(lambda pat: '%s_%s' % (pat.group(1), pat.group(2).upper()), language)
-			if gettext.find(domain, localedir=localedir, languages=[language]):
-				translation = gettext.translation(domain, localedir=localedir, languages=[language])
-				translation.language = lang
-				return translation
-		if self._fallback:
-			translation = gettext.translation(domain, localedir=localedir, languages=[self._default_language], fallback=self._fallback)
-			if translation:
-				translation.language = self._default_language
+				locale = self.RE_LANG.sub(lambda pat: '%s_%s' % (pat.group(1), pat.group(2).upper()), language)
+			try:
+				translation = gettext.translation(domain, localedir=localedir, languages=[locale])
+			except IOError:
+				continue
+			translation._info.setdefault('language', locale)
 			return translation
+		if self.fallback:
+			return gettext.translation(domain, localedir=localedir, languages=self.default_languages, fallback=self.fallback)

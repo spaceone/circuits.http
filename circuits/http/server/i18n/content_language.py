@@ -15,7 +15,7 @@ class ContentLanguage(BaseComponent):
 	@sets_header('Content-Language')
 	def set_content_language(self, client):
 		if hasattr(client.resource, 'content_language'):
-			language = client.resource.content_language()
-			if language == '':
+			language = client.resource.content_language(client)
+			if language is None:
 				raise NOT_ACCEPTABLE('The resource is not available in the requested Content-Language.')
-			return language
+			return language or None
