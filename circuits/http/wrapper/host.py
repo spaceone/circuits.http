@@ -23,7 +23,7 @@ class Host(object):
 	def resolve(self):
 		"""Resolve IP address and FQDN"""
 		if not self.name or self.name == self.ip:
-			self.name = _socket.getfqdn(self.ip)
+			self.name = _socket.getfqdn(self.ip or '')
 		elif not self.ip:
 			try:
 				self.ip = _socket.gethostbyname(self.name)
