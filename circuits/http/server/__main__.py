@@ -54,12 +54,15 @@ class HTTPServer(BaseComponent):
 
 		self.add_components()
 
-		super(HTTPServer, self).run()
+		if not self.arguments.wsgi:
+			super(HTTPServer, self).run()
+		return self
 
 	def add_arguments(self):
 		add = self.parser.add_argument
 
 		add('-b', '--bind', metavar='URI', action='append', default=[])
+		add('-w', '--wsgi', action='store_true', help='Start as WSGI server')
 
 		add(
 			'-n', '--no-daemon', default=True, dest='daemonize', action='store_false',
@@ -112,6 +115,8 @@ class HTTPServer(BaseComponent):
 
 	def add_sockets(self):
 		if not self.arguments.bind:
+			if self.arguments.wsgi:
+				return
 			import warnings
 			warnings.warn('No socket to bind to. Use --bind.', RuntimeWarning)
 		for bind in self.arguments.bind:
@@ -150,6 +155,7 @@ class HTTPServer(BaseComponent):
 	def main(cls, args=sys.argv[1:]):
 		server = cls()
 		server.run(args)
+		return server
 
 
 if __name__ == '__main__':

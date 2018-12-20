@@ -17,7 +17,6 @@ class HTTPClient(BaseComponent):
 		self._buffers = {}
 		self._socket_map = {}
 		self._channel_sock = {}
-		self.state_machine = ClientStateMachine()
 
 #	@handler("close")
 #	def _on_close(self):  # FIXME: socket argument missing
