@@ -32,14 +32,14 @@ class WSGIClient(Client, WSGI):
 class WSGIServer(HTTPServer):
 
 	@classmethod
-	def main(cls, *args):
+	def main(cls, args):
 		return super(WSGIServer, cls).main(['-w', '-n'] + list(args))
 
 
 class Application(BaseComponent):
 
 	def __init__(self, ServerClass, *args):
-		server = ServerClass.main(*args)
+		server = ServerClass.main(args)
 		super(Application, self).__init__(channel=server.channel)
 		server.register(self)
 
