@@ -3,7 +3,7 @@
 Test with:
 apt-get install libapache2-mod-wsgi
 
-WSGIScriptAliasMatch /example(/.*) /var/www/wsgi_application.py$1
+WSGIScriptAlias /example /var/www/wsgi_application.py
 curl -i http://localhost/example/
 """
 
@@ -24,14 +24,14 @@ class Server(WSGIServer):
 
 class HelloWorld(Resource):
 
-	path = '/'
+	path = '/{path:.*}'
 
 	@method
 	def GET(self, client):
+		if 'exception' in client.path_segments:
+			raise ValueError('Hello World!')
 		return 'Hello World!'
 	GET.codec('text/plain')
 
 
-server = WSGIServer.main('-d4')
-application = Application(server)
-application += server
+application = Application(Server, '-d4')

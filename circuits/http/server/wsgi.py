@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 import sys
 import traceback
 
@@ -37,8 +38,12 @@ class WSGIServer(HTTPServer):
 
 class Application(BaseComponent):
 
-	def init(self, server, *args, **kwargs):
-		self.server = server
+	def __init__(self, ServerClass, *args):
+		server = ServerClass.main(*args)
+		super(Application, self).__init__(channel=server.channel)
+		server.register(self)
+
+	def init(self, *args, **kwargs):
 		self.requests = []
 		self.responses = []
 
@@ -48,7 +53,6 @@ class Application(BaseComponent):
 			client.from_environ(environ)
 
 			self.secure = client.request.uri.scheme == 'https'
-			self.host = Host(client.server_address, client.server_port)
 			self.host = client.server_address
 			self.port = client.server_port
 
@@ -65,13 +69,13 @@ class Application(BaseComponent):
 			start_response('500 Internal Server Error', [('Content-Type', 'text/plain')], sys.exc_info())
 			return [traceback.format_exc()]
 
-	@handler('started')
+	@handler('started', priority=-1)
 	def on_started(self, *args, **kwargs):
 		for client in self.requests:
 			scheme = client.request.uri.scheme
 			client.request.uri.scheme = None
-			yield
-			self.fire(read(client.socket, (str(client.request) + str(client.request.headers) + str(client.request.body))), self.server.channel)
+			yield  # self.wait('routes.create')  # handle all other started events, which are registering the routes
+			self.fire(read(client.socket, (str(client.request) + str(client.request.headers) + str(client.request.body))), self.channel)
 			client.request.uri.scheme = scheme
 
 	@handler("response.body", priority=1.1)
