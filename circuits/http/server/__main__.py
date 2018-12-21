@@ -104,7 +104,8 @@ class HTTPServer(BaseComponent):
 			self += Daemon(self.arguments.pidfile, os.getcwd())
 
 	def add_drop_priviledges(self):
-		self += DropPrivileges(self.arguments.user, self.arguments.group, self.arguments.umask, channel=self.channel)
+		if any(arg is not None for arg in (self.arguments.user, self.arguments.group, self.arguments.umask)):
+			self += DropPrivileges(self.arguments.user, self.arguments.group, self.arguments.umask, channel=self.channel)
 
 	def add_logger(self):
 		self += Logger(self.arguments.logfile, logformat=self.logformat, channel=self.channel)
