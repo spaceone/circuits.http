@@ -25,7 +25,7 @@ class WSGI(Resource):
 	path = '/wsgi/{path_info:.*}'
 
 	def init(self, *args, **kwargs):
-		self += Gateway(application, channel=self.channel)
+		self += Gateway(application, multithread=False, channel=self.channel)
 
 	@method
 	def GET(self, client):

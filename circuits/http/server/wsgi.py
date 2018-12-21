@@ -3,7 +3,7 @@ from __future__ import absolute_import
 import sys
 import traceback
 
-from circuits.core import BaseComponent, handler
+from circuits import BaseComponent, handler, Worker, task
 from circuits.tools import tryimport
 from circuits.net.events import read
 from circuits.six import reraise
@@ -50,7 +50,6 @@ class Application(BaseComponent):
 	def __call__(self, environ, start_response, exc_info=None):
 		try:
 			client = WSGIClient(environ=environ, use_path_info=True)
-			client.from_environ(environ)
 
 			self.secure = client.request.uri.scheme == 'https'
 			self.host = client.server_address
@@ -86,37 +85,36 @@ class Application(BaseComponent):
 
 
 class Gateway(BaseComponent):
-	# TODO: add possibility for a thread pool
 
-	def init(self, application, *args, **kwargs):
+	def __init__(self, application, *args, **kwargs):
 		self.application = application
+		self.multiprocess = kwargs.get('multiprocess', False)
+		self.multithread = kwargs.get('multithread', False)
+		self.worker = kwargs.get('worker', None)
+		super(Gateway, self).__init__(*args, **kwargs)
+		if self.multithread or self.multiprocess:
+			Worker(self.multiprocess, self.worker, channel=self.channel).register(self)
 
-	@httphandler('request', priority=0.8)
+	@httphandler('request', priority=1.1)
+	def _on_request_stop(self, event, client):
+		event.stop()  # Workaround for circuits error not calling coroutines
+
+	@httphandler('request', priority=1.2)
 	def _on_request(self, event, client):
 		event.stop()
-
-		wsgi = WSGIClient(client.request, None, client.socket, client.server, environ={})
-		wsgi.errors = StringIO()
-
-		def start_response(status, headers, exc_info=None):  # TODO: what to do with exc_info?
-			wsgi.response.status.parse(status)
-			wsgi.exc_info = exc_info
-			for key, value in headers:
-				wsgi.response.headers.append(key, value)
-			return wsgi.response.body.write
-
-		environ = wsgi._get_environ()
-		if 'path_info' in client.path_segments:
-			environ['PATH_INFO'] = client.path_segments['path_info']
-
-		body = self.application(environ, start_response)
-
+		environ = {
+			'wsgi.errors': StringIO(),
+			'wsgi.run_once': False,
+			'wsgi.multithread': self.multithread,
+			'wsgi.multiprocess': self.multiprocess,
+			'PATH_INFO': client.path_segments.get('path_info'),
+		}
+		wsgi = WSGIClient(client.request, None, client.socket, client.server, environ)
+		if self.multiprocess or self.multithread:
+			yield self.call(task(wsgi, self.application))
+		else:
+			wsgi(self.application)
 		if wsgi.exc_info:
 			reraise(wsgi.exc_info[0], wsgi.exc_info[1], wsgi.exc_info[2])
-
 		client.response = wsgi.response
-		# TODO: must iterate over the first item
-		if body and (not isinstance(body, (list, tuple)) or len(body) != 1 or body[0]):
-			client.response.body = body
-
 		self.fire(RE(client), client.server.channel)
