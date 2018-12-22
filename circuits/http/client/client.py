@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from circuits.six import reraise
 from circuits.core import handler, BaseComponent
 from circuits.net.sockets import TCPClient
 from circuits.net.events import close, connect, write
@@ -8,6 +9,13 @@ from circuits.http.events import response as ResponseEvent
 
 from httoop import ClientStateMachine
 from httoop.semantic.request import ComposedRequest
+
+
+class ClientStateMachine(ClientStateMachine):
+
+	def on_message_started(self):
+		super(ClientStateMachine, self).on_message_started()
+		self.request = self.requests.pop(0)
 
 
 class HTTPClient(BaseComponent):
@@ -24,7 +32,7 @@ class HTTPClient(BaseComponent):
 #			self.fire(close(), self.socket)
 
 	@handler('connect', priority=1.0)
-	def _on_connect(self, host=None, port=None, secure=None):
+	def _on_connect(self, host=None, port=None, secure=None, certfile=None, keyfile=None, ca_certs=None):
 		try:
 			socket = self._socket_map[(host, port, secure)]
 			if not socket.connected:
@@ -40,7 +48,7 @@ class HTTPClient(BaseComponent):
 			self._socket_map[(host, port, secure)] = socket
 			self._channel_sock[socket.channel] = socket
 		if not socket.connected:
-			self.fire(connect(host, port, secure), socket)
+			self.fire(connect(host, port, secure, certfile=certfile, keyfile=keyfile, ca_certs=ca_certs), socket)
 		#event.stop()  # FIXME: self.call does conflict with this
 		return socket
 
@@ -51,6 +59,8 @@ class HTTPClient(BaseComponent):
 			port = client.request.uri.port
 			secure = client.request.uri.scheme == u'https'
 			result = yield self.call(connect(host, port, secure, certfile=client.ssl.cert, keyfile=client.ssl.key, ca_certs=[client.ssl.ca]))
+			if result.errors:
+				reraise(*result.value)
 			client.socket = result.value
 			if not client.socket.connected:
 				yield self.wait("connected", client.socket.channel)
@@ -81,6 +91,7 @@ class HTTPClient(BaseComponent):
 		except KeyError:
 			return  # server disconnected
 		parser = state['parser']
+		parser.requests = [x.request for x in state['requests']]
 		for response_ in parser.parse(data):
 			try:
 				client = state['requests'].pop(0)
@@ -91,6 +102,6 @@ class HTTPClient(BaseComponent):
 
 	@handler("response")
 	def _on_response(self, client):
-		if client.response.headers.element("Connection").close:  # TODO: ParsedResponse(response).close
+		if 'Connection' in client.response.headers and client.response.headers.element("Connection").close:  # TODO: ParsedResponse(response).close
 			self.fire(close(), client.socket)
 		return client

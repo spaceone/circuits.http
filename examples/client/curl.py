@@ -2,12 +2,13 @@
 
 import sys
 import os
+import traceback
 from argparse import ArgumentParser
 
 from httoop import Request
-from httoop.header import Authorization, ProxyAuthorization
+from httoop.header import Authorization
 
-from circuits import handler
+from circuits import handler, Debugger
 from circuits.http.client import HTTPClient
 from circuits.http.events import request as RequestEvent
 from circuits.http.wrapper import Client
@@ -18,6 +19,7 @@ class Curl(HTTPClient):
 
 	def __init__(self):
 		self.parse_arguments()
+		self.response_received = 0
 		a = self.arguments
 
 		if a.manual:
@@ -32,6 +34,8 @@ class Curl(HTTPClient):
 		#certtype = a.cert_type
 
 		super(Curl, self).__init__(channel='curl')
+		if a.debug:
+			self += Debugger()
 
 		for url in a.url:
 			self.build_request(url)
@@ -103,10 +107,16 @@ class Curl(HTTPClient):
 				request.headers.setdefault('Content-Type', content_type)
 				request.body.mimetype = request.headers.element('Content-Type').mimetype
 				request.body = data
-				request.method = a.request or 'POST' if not a.get else 'GET'
+
+		request.method = 'HEAD' if a.head else (a.request or 'POST' if not a.get else 'GET')
 
 		client = Client(request, None)
 		self.fire(RequestEvent(client))
+
+	@handler('exception')
+	def _on_excpetion(self, *args, **kwargs):
+		print ''.join(traceback.format_exception_only(args[0], args[1]) + args[2])
+		self.stop(1)
 
 	@handler('request_success')
 	def request(self, evt, client):
@@ -116,8 +126,9 @@ class Curl(HTTPClient):
 
 	@handler('response_success')
 	def response(self, evt, client):
+		self.response_received += 1
 		request, response = client
-		if self.arguments.head:
+		if self.arguments.include or self.arguments.head:
 			self.arguments.output.write(bytes(response))
 			self.arguments.output.write(bytes(response.headers))
 		if self.arguments.dump_header:
@@ -133,6 +144,9 @@ class Curl(HTTPClient):
 		if response.status.redirection and follow_redirects:
 			pass
 
+		if self.response_received >= len(self.arguments.url):
+			self.stop()
+
 	def write_output_format(self, response):
 		write_out = self.arguments.write_out
 		if write_out == '@-':
@@ -143,6 +157,7 @@ class Curl(HTTPClient):
 
 		import re
 		write_out = re.sub('(^|[^%])%{([^}]+)}', r'\1%(\2)s', write_out).replace('%%', '%(percent)s')  # FIXME: incomplete
+
 		class FormatDict(dict):  # time consuming things can be inserted manually in __get...__
 			pass
 		write_out = write_out % FormatDict({
@@ -190,6 +205,7 @@ class Curl(HTTPClient):
 
 		p.add_argument('url', metavar='<url>', nargs='*')
 
+		o('--debug', action='store_true', help='Enabled the debugger')
 		o('-#', '--progress-bar', help='Display transfer progress as a progress bar', action='store_true')
 		o('-I', '--head', help='Show document info only', action='store_true')
 		o('-M', '--manual', help='Display the full manual', action='store_true')
@@ -389,6 +405,7 @@ class Curl(HTTPClient):
 			if value:
 				self.parser.error('--%s not yet supported' % (name,))
 		return _unsupported
+
 
 if __name__ == '__main__':
 	Curl().run()
