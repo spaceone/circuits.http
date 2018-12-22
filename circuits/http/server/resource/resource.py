@@ -3,6 +3,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
+import types
 import inspect
 
 from circuits import BaseComponent, handler
@@ -85,8 +86,18 @@ class Resource(BaseComponent):
 
 	@httphandler('request', priority=0.5)
 	def _execute_method(self, client):
-		client.data = client.method(*self.positional_arguments(client), **self.keyword_arguments(client))
-		client.method.encode(client)
+		if not client.method.coroutine:
+			client.data = client.method(*self.positional_arguments(client), **self.keyword_arguments(client))
+			client.method.encode(client)
+
+	@httphandler('request', priority=0.5)
+	def _execute_method_async(self, client):
+		if not client.method.coroutine:
+			return
+		response = client.method(*self.positional_arguments(client), **self.keyword_arguments(client))
+		assert isinstance(response, types.GeneratorType)
+		for _ in response:
+			yield _
 
 	def keyword_arguments(self, client):
 		return {}

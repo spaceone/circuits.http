@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import
 
+import inspect
+
 from circuits import BaseComponent
 from circuits.http.utils import allof
 
@@ -9,13 +11,13 @@ from httoop import Method as _htMethod, FORBIDDEN
 from httoop.codecs import Codec as _htCodec, lookup as codec_lookup
 
 
-def method(func=None, http_method=None):
+def method(func=None, http_method=None, **kwargs):
 	if isinstance(func, (bytes, unicode)) and http_method is None:
 		http_method = func
 		func = None
 
 	def _decorator(method):
-		return Method(method, http_method or func.__name__)
+		return Method(method, http_method or func.__name__, **kwargs)
 
 	if func is None:
 		return _decorator
@@ -39,11 +41,12 @@ class Method(object):  # TODO: minimize
 		self.register(resource)
 		#self._resource = resource  # FIXME: recursion error: circuits trys to register instance members which are components
 
-	def __init__(self, method, http_method):
+	def __init__(self, method, http_method, **kwargs):
 		self.http_method = http_method
 		self.method = method
 		self.safe = _htMethod(self.http_method).safe
 		self.idempotent = _htMethod(self.http_method).idempotent
+		self.coroutine = kwargs.get('coroutine', inspect.isgeneratorfunction(method))
 
 		self.content_types = {}
 		self.content_type_params = {}
