@@ -25,4 +25,6 @@ class Vary(BaseComponent):
 			vary += ['If-Match', 'If-None-Match']
 		if 'Last-Modified' in client.response.headers:
 			vary += ['If-Modified-Since', 'If-Unmodified-Since']
+		if 'Content-Encoding' in client.response.headers:
+			vary += 'Accept-Encoding'
 		return ', '.join(vary)  # TODO: return list

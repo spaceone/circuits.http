@@ -9,7 +9,7 @@ from circuits import BaseComponent, handler
 from circuits.http.utils import httphandler
 from circuits.http.server.resource.method import Method
 from circuits.http.server.caching import CacheControl, ETag, Expires, IfRange, LastModified, Vary, Pragma
-from circuits.http.server.content import RequestContentType, ContentType, Security
+from circuits.http.server.content import RequestContentType, ContentType, Security, AcceptEncoding
 
 from httoop import METHOD_NOT_ALLOWED, NOT_IMPLEMENTED
 
@@ -24,7 +24,7 @@ class Resource(BaseComponent):
 
 	default_features = [
 		CacheControl, ETag, Expires, IfRange, LastModified, Vary, Pragma,
-		RequestContentType, ContentType, Security
+		RequestContentType, ContentType, Security, AcceptEncoding
 	]
 
 	path = None
@@ -123,3 +123,6 @@ class Resource(BaseComponent):
 
 	def content_type(self, client):
 		return client.method.content_type_negotiation(client)
+
+	def content_encoding(self, client):
+		pass
