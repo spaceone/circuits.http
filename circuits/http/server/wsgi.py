@@ -115,6 +115,9 @@ class Gateway(BaseComponent):
 		else:
 			wsgi(self.application)
 		if wsgi.exc_info:
-			reraise(wsgi.exc_info[0], wsgi.exc_info[1], wsgi.exc_info[2])
+			try:
+				reraise(wsgi.exc_info[0], wsgi.exc_info[1], wsgi.exc_info[2])
+			finally:
+				wsgi.exc_info = None
 		client.response = wsgi.response
 		self.fire(RE(client), client.server.channel)

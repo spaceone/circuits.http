@@ -15,6 +15,7 @@ from httoop import StatusException
 def sets_header(header, ifmethod=None):
 	if not isinstance(ifmethod, (type(None), list, tuple)):
 		ifmethod = (ifmethod,)
+
 	def _decorator(func):
 		@wraps(func)
 		def _decorated(self, client, *args, **kwargs):
@@ -32,6 +33,7 @@ def if_header_set(headers, ifmethod=None, with_event=False):
 		ifmethod = (ifmethod,)
 	if not isinstance(headers, (list, tuple)):
 		headers = (headers,)
+
 	def _decorator(func):
 		@wraps(func)
 		def _decorated(self, event, client, *args, **kwargs):
@@ -50,6 +52,7 @@ def httperror(func):
 	if args and args[0] == "self":
 		del args[0]
 	with_event = getattr(func, "event", bool(args and args[0] == "event"))
+
 	@wraps(func)
 	def _decorated(self, event, client, *args, **kwargs):
 		try:

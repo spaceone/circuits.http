@@ -44,3 +44,7 @@ class Domain(BaseComponent):
 		uri2.path_segments = path
 		uri.join(uri2)
 		return uri
+
+
+class AnyDomain(Domain):
+	pass  # TODO: implement a domain component which allows *

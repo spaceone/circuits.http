@@ -55,7 +55,7 @@ class Resource(BaseComponent):
 			self.methods[member.http_method] = getattr(self, name)
 
 		if 'GET' not in self.methods:
-			raise RuntimeError('A HTTP resource must support a GET method.')
+			raise RuntimeError('A HTTP resource must support a GET method. %r does not.' % (type(self).__name__,))
 
 		self.methods.setdefault('HEAD', self.methods['GET'])
 		self.allowed_methods = tuple(self.methods.keys())
