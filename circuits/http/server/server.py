@@ -7,7 +7,7 @@ from __future__ import print_function
 import sys
 from time import time
 from ssl import SSLError
-from traceback import format_tb
+from traceback import format_tb, format_stack, format_exception_only
 
 from circuits import BaseComponent, handler, reprhandler, Event
 from circuits.net.utils import is_ssl_handshake
@@ -207,19 +207,23 @@ class HTTP(BaseComponent):
 
 	@handler('httperror', priority=1.1)
 	def _on_handle_httperror(self, event, client, httperror):
+		event.ignore = False
 		try:
 			state = self._buffers[client.socket]
 		except KeyError:
 			self._premature_client_disconnect(client)
+			event.ignore = True
 			event.stop()
 			return
 
 		if client in state.responses:
+			event.ignore = True
 			event.stop()
 			raise RuntimeError('Got httperror event after response event. Client: %r, HTTPError: %r. Ignoring it.' % (client, httperror))
 
 	@handler('httperror', priority=0.1)
 	def _on_httperror(self, event, client, httperror):
+		event.stop()
 		# TODO: move into httoop?
 		# set the corresponding HTTP status
 		client.response.status = httperror.status
@@ -238,7 +242,7 @@ class HTTP(BaseComponent):
 	@handler("httperror_success")
 	def _on_httperror_success(self, evt, httperror):
 		"""default HTTP error handler"""
-		if evt.stopped:
+		if evt.ignore:
 			return
 		client = evt.args[0]
 		client.response.body.encode()
@@ -352,8 +356,10 @@ class HTTP(BaseComponent):
 			httperror = INTERNAL_SERVER_ERROR(u'%s (%s)' % (etype.__name__, httperror))
 		if not isinstance(traceback, (list, tuple)):
 			traceback = format_tb(traceback)
-		httperror.traceback = u''.join(traceback)
-		self.fire(HTTPError(client, httperror))
+		httperror.traceback =  u''.join(traceback + format_exception_only(*error[:2]))
+#		channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
+		channels = [self.channel]
+		self.fire(HTTPError(client, httperror), *channels)
 
 	@handler('error')
 	def _on_socket_error(self, socket, error):

@@ -57,6 +57,9 @@ class Method(object):  # TODO: minimize
 		self._resource = None
 		self._conditions = []
 
+	def __repr__(self):
+		return '<Method %r of %r>' % (self.http_method, self.parent)
+
 	def __call__(self, client, *args, **kwargs):
 		if not allof(*self._conditions)(client):
 			raise FORBIDDEN()
