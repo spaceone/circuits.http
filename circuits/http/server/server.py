@@ -7,7 +7,7 @@ from __future__ import print_function
 import sys
 from time import time
 from ssl import SSLError
-from traceback import format_tb, format_stack, format_exception_only
+from traceback import format_tb, format_exception_only
 
 from circuits import BaseComponent, handler, reprhandler, Event
 from circuits.net.utils import is_ssl_handshake
@@ -356,7 +356,7 @@ class HTTP(BaseComponent):
 			httperror = INTERNAL_SERVER_ERROR(u'%s (%s)' % (etype.__name__, httperror))
 		if not isinstance(traceback, (list, tuple)):
 			traceback = format_tb(traceback)
-		httperror.traceback =  u''.join(traceback + format_exception_only(*error[:2]))
+		httperror.traceback = u''.join(traceback + format_exception_only(*error[:2]))
 #		channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
 		channels = [self.channel]
 		self.fire(HTTPError(client, httperror), *channels)

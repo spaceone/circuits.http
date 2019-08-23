@@ -6,8 +6,6 @@ from __future__ import unicode_literals
 import re
 import gettext
 
-from httoop import NOT_ACCEPTABLE
-
 from circuits.http.utils import httphandler
 
 

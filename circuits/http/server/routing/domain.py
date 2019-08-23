@@ -64,8 +64,7 @@ class DomainRouter(BaseComponent):
 			# TODO: create a exception for this, so that implementors can give
 			# alternative host links
 			# TODO: Implement ExposeDomains component
-			UnknownHost = lambda: BAD_REQUEST('The requested Host is unknown.')
-			raise UnknownHost()
+			raise BAD_REQUEST('The requested Host is unknown.')
 
 	@httphandler('routing_success')
 	def _route_into_domain(self, evt, result):

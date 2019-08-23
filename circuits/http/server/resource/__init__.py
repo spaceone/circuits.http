@@ -8,4 +8,4 @@ from circuits.http.server.resource.resource import Resource
 from circuits.http.server.resource.method import Method, method
 from circuits.http.server.resource.static import StaticResource
 
-__all__ = ('Domain', 'Resource', 'Method', 'method')
+__all__ = ('Domain', 'Resource', 'Method', 'method', 'StaticResource')
