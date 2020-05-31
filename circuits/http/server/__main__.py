@@ -42,7 +42,7 @@ class HTTPServer(BaseComponent):
 
 	def __init__(self, *args, **kwargs):
 		super(HTTPServer, self).__init__(*args, **kwargs)
-		self.parser = ArgumentParser(name, version=str(version), description=__doc__, epilog='https://github.com/spaceone/circuits.http/')
+		self.parser = ArgumentParser(name, description=__doc__, epilog='https://github.com/spaceone/circuits.http/')
 
 	def run(self, args):
 		self.add_arguments()
@@ -89,6 +89,8 @@ class HTTPServer(BaseComponent):
 		add(
 			'-d', '--debug', type=int, default=0, dest='loglevel',
 			help='the loglevel as string or int (default: %(default)s)')
+
+		add('-v', '--version', action='version', version=str(version))
 
 	def parse_arguments(self, args):
 		self.arguments = self.parser.parse_args(args)
