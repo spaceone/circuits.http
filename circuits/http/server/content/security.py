@@ -46,6 +46,18 @@ class Security(BaseComponent):
 			return client.resource.content_security_policy(client)
 
 	@httphandler('request', priority=0.80)
+	@sets_header('Referrer-Policy')
+	def referrer_policy(self, client):
+		if hasattr(client.resource, 'referrer_policy'):
+			return client.resource.referrer_policy(client)
+
+	@httphandler('request', priority=0.80)
+	@sets_header('Feature-Policy')
+	def feature_policy(self, client):
+		if hasattr(client.resource, 'feature_policy'):
+			return client.resource.feature_policy(client)
+
+	@httphandler('request', priority=0.80)
 	@sets_header('X-Permitted-Cross-Domain-Policies')
 	def permitted_cross_domain_policies(self, client):
 		if hasattr(client.resource, 'permitted_cross_domain_policies'):
