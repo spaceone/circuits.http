@@ -7,6 +7,7 @@ from circuits import BaseComponent, handler
 from circuits.six import text_type, string_types
 
 import os
+import stat
 import sys
 from io import IOBase
 from datetime import datetime
@@ -21,7 +22,9 @@ class Logger(BaseComponent):
 		super(Logger, self).__init__(**kwargs)
 
 		if isinstance(logfile, string_types):
-			self.file = open(os.path.abspath(os.path.expanduser(logfile)), 'a')
+			filename = os.path.abspath(os.path.expanduser(logfile))
+			mode = 'a' if not stat.S_ISCHR(os.stat(filename).st_mode) else 'w'
+			self.file = open(filename, mode)
 		elif isinstance(logfile, IOBase) or hasattr(logfile, 'write'):
 			self.file = logfile
 		else:
