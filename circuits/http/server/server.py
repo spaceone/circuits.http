@@ -310,7 +310,7 @@ class HTTP(BaseComponent):
 	def default_internal_server_error(self, client, error):
 		client.request = Request()
 		client.response = Response(status=500)
-		client.response.headers['Content-Length'] = bytes(len(client.response.body))
+		client.response.headers['Content-Length'] = str(len(client.response.body)).encode('ASCII')
 		return HTTPError(client, INTERNAL_SERVER_ERROR())
 
 	@handler("exception")
