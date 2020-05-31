@@ -19,9 +19,9 @@ from circuits.http.server._state import State
 from httoop import StatusException, INTERNAL_SERVER_ERROR, Request, Response
 from httoop.semantic.response import ComposedResponse
 
-_ResponseStart = type(b'response.start', (Event,), {})
-_ResponseBody = type(b'response.body', (Event,), {})
-_ResponseComplete = type(b'response.complete', (Event,), {})
+_ResponseStart = type('response.start', (Event,), {})
+_ResponseBody = type('response.body', (Event,), {})
+_ResponseComplete = type('response.complete', (Event,), {})
 
 
 class HTTP(BaseComponent):

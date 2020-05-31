@@ -12,7 +12,7 @@ from httoop.codecs import Codec as _htCodec, lookup as codec_lookup
 
 
 def method(func=None, http_method=None, **kwargs):
-	if isinstance(func, (bytes, unicode)) and http_method is None:
+	if isinstance(func, str) and http_method is None:
 		http_method = func
 		func = None
 

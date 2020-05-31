@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
-from __future__ import unicode_literals
 
 from circuits import BaseComponent, Event, handler
 from circuits.http.utils import httphandler
@@ -19,7 +18,7 @@ class RegexPathRouter(Router):
 
 	@handler('started', channel='*')
 	def _on_started(self, manager):
-		self.fire(Event.create(b'routes.create'))
+		self.fire(Event.create('routes.create'))
 
 	@handler('routes.create')
 	def _on_register_routes(self):
@@ -60,8 +59,8 @@ class RegexPathRouter(Router):
 		while isinstance(parent, Resource):
 			if parent is parent.parent:
 				break
-			path.insert(0, parent.path.lstrip('/'))
+			path.insert(0, parent.path.lstrip(u'/'))
 			parent = parent.parent
-		path.insert(0, '')
-		path.append(resource.path.lstrip('/'))
+		path.insert(0, u'')
+		path.append(resource.path.lstrip(u'/'))
 		return b'/'.join(path)  # FIXME: python3
