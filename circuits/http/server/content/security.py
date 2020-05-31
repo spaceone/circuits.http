@@ -30,7 +30,7 @@ class Security(BaseComponent):
 	@httphandler('request', priority=0.80)
 	@sets_header('Strict-Transport-Security')
 	def strict_transport_security(self, client):
-		if hasattr(client.resource, 'strict_transport_security'):
+		if hasattr(client.resource, 'strict_transport_security') and client.request.uri.scheme == 'https':
 			return client.resource.strict_transport_security(client)
 
 	@httphandler('request', priority=0.80)
