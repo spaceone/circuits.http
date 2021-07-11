@@ -128,7 +128,7 @@ class Method(object):  # TODO: minimize
 		_codec = codec
 		if isinstance(codec, _htCodec) or isinstance(codec, type) and issubclass(codec, _htCodec):
 			def _codec(resource, client):
-				return codec.encode(client.data)
+				return codec.encode(client.data, mimetype=client.response.body.mimetype)
 				#client.response.body.codec = codec
 				#client.response.body.encode()
 		self.content_types[mimetype] = (_codec, quality)
@@ -139,7 +139,7 @@ class Method(object):  # TODO: minimize
 		if isinstance(codec, _htCodec) or isinstance(codec, type) and issubclass(codec, _htCodec):
 			def _codec(resource, client):
 				body = client.request.body.read()  # FIXME: don't load into RAM
-				return codec.decode(body)
+				return codec.decode(body, mimetype=client.request.body.mimetype)
 		self.request_content_types[mimetype] = (_codec, quality)
 		self.request_content_type_params[mimetype] = params
 
