@@ -5,18 +5,20 @@ curl -i http://root:bar@localhost:8090/
 """
 
 import sys
+
 sys.path.insert(0, '.')
 import pwd
 import re
 from crypt import crypt
 
-from server import HTTPServer
-from resource import BaseResource as Resource
-from circuits import Debugger, BaseComponent, handler
-from circuits.http.server.resource import method
-from circuits.http.events import authentication
-
 from httoop import UNAUTHORIZED
+
+from circuits import BaseComponent, Debugger, handler
+from circuits.http.events import authentication
+from circuits.http.server.resource import method
+
+from resource import BaseResource as Resource
+from server import HTTPServer
 
 
 class ShadowAuth(BaseComponent):

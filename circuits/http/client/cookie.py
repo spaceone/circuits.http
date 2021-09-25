@@ -4,7 +4,7 @@ from time import time
 
 from httoop.header import Cookie as htCookie
 
-from circuits.core import handler, BaseComponent
+from circuits.core import BaseComponent, handler
 
 
 class Cookie(object):

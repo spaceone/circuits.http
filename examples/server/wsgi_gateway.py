@@ -5,7 +5,7 @@ python wsgi_gateway.py -n --bind http://0.0.0.0:8090/
 curl -i -X POST  http://localhost:8090/wsgi/foo/bar/baz
 """
 from circuits.http.server.__main__ import HTTPServer
-from circuits.http.server.resource import Resource, method, Domain
+from circuits.http.server.resource import Domain, Resource, method
 from circuits.http.server.wsgi import Gateway
 
 

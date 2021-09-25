@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-from circuits import BaseComponent, handler
-from circuits.six import text_type, string_types
+from __future__ import absolute_import, unicode_literals
 
 import os
 import stat
 import sys
-from io import IOBase
 from datetime import datetime
+from io import IOBase
+
+from circuits import BaseComponent, handler
+from circuits.six import string_types, text_type
 
 
 class Logger(BaseComponent):

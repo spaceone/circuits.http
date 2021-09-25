@@ -6,17 +6,19 @@ firefox http://localhost:8090/
 """
 
 import sys
+
 sys.path.insert(0, '.')
-import os
 import cgi
+import os
 
 import mako
 from mako.lookup import TemplateLookup
 
-from server import HTTPServer
-from resource import BaseResource as Resource
 from circuits import Debugger
 from circuits.http.server.resource import method
+
+from resource import BaseResource as Resource
+from server import HTTPServer
 
 templates = TemplateLookup(
 	directories=[os.path.join(os.path.dirname(__file__), "tpl")],

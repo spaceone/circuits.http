@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
+
+from httoop import BAD_REQUEST, MOVED_PERMANENTLY, URI
+from httoop.header import Host
 
 from circuits import BaseComponent, handler
-from circuits.http.utils import httphandler
 from circuits.http.events import routing
 from circuits.http.server.resource import Domain
-
-from httoop import MOVED_PERMANENTLY, BAD_REQUEST, URI
-from httoop.header import Host
+from circuits.http.utils import httphandler
 
 
 class DomainRouter(BaseComponent):

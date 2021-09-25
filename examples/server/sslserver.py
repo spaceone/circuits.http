@@ -4,14 +4,15 @@ curl -i https://localhost:8443/ --cacert ~/git/circuits.http/examples/server/ssl
 """
 
 import sys
+
 sys.path.insert(0, '.')
 
-from server import HTTPServer
-from resource import BaseResource as Resource
 from circuits import Debugger
 from circuits.http.server.resource import method
 from circuits.net.sockets import TCPServer
 
+from resource import BaseResource as Resource
+from server import HTTPServer
 
 sslsocket = lambda channel: TCPServer(('', 8443), secure=True, certfile='./ssl/server-cert.pem', keyfile='./ssl/server-key.pem', channel=channel)
 

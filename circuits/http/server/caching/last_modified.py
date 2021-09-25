@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
+
+from httoop import BAD_REQUEST, NOT_MODIFIED, PRECONDITION_FAILED, Date, InvalidDate
 
 from circuits import BaseComponent
-from circuits.http.utils import sets_header, if_header_set, httphandler
-
-from httoop import Date, InvalidDate, NOT_MODIFIED, BAD_REQUEST, PRECONDITION_FAILED
+from circuits.http.utils import httphandler, if_header_set, sets_header
 
 
 class LastModified(BaseComponent):

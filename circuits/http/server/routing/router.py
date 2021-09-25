@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
+
+from httoop import FORBIDDEN, NOT_FOUND
 
 from circuits import BaseComponent
-from circuits.http.events import response, request
+from circuits.http.events import request, response
 from circuits.http.utils import httphandler
-
-from httoop import NOT_FOUND, FORBIDDEN
 
 
 class Router(BaseComponent):

@@ -7,7 +7,7 @@ WSGIScriptAlias /example /var/www/wsgi_application.py
 curl -i http://localhost/example/
 """
 
-from circuits.http.server.resource import Resource, method, Domain
+from circuits.http.server.resource import Domain, Resource, method
 from circuits.http.server.wsgi import Application, WSGIServer
 
 

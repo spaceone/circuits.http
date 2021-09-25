@@ -7,12 +7,14 @@ curl -i http://localhost:8090/forum/foo/threads
 curl -i http://localhost:8090/forum/foo/threads/bar
 """
 import sys
+
 sys.path.insert(0, '.')
 
-from server import HTTPServer
-from resource import BaseResource as Resource
 from circuits import Debugger
-from circuits.http.server.resource import method, Method
+from circuits.http.server.resource import Method, method
+
+from resource import BaseResource as Resource
+from server import HTTPServer
 
 
 class ForumIndex(Resource):

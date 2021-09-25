@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
+
+from httoop import URI
 
 from circuits import BaseComponent, handler
 from circuits.http.server.resource.resource import Resource
-
-from httoop import URI
 
 
 class Domain(BaseComponent):

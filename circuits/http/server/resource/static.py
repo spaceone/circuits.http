@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
-import os
 import mimetypes
+import os
 from errno import EACCES, ENOENT
 
-from circuits.http.server.resource.resource import Resource
-from circuits.http.server.resource.method import method
-from circuits.http.utils import httphandler
-
 from httoop import FORBIDDEN, NOT_FOUND
+
+from circuits.http.server.resource.method import method
+from circuits.http.server.resource.resource import Resource
+from circuits.http.utils import httphandler
 
 try:
 	import magic

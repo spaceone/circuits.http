@@ -1,14 +1,16 @@
 #!/usr/bin/env python2
 
 import sys
+
 sys.path.insert(0, '.')
 from ssl import CERT_OPTIONAL
 
-from server import HTTPServer
-from resource import BaseResource as Resource
 from circuits import Debugger
 from circuits.http.server.resource import method
 from circuits.net.sockets import TCPServer
+
+from resource import BaseResource as Resource
+from server import HTTPServer
 
 
 class SSLSocket(TCPServer):

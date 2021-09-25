@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 from functools import wraps
 from inspect import getargspec
 
+from httoop import StatusException
+
 from circuits import handler as event_handler
 from circuits.http.events import HTTPError
-
-from httoop import StatusException
 
 
 def sets_header(header, ifmethod=None):

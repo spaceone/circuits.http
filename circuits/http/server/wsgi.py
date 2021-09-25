@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+
 import sys
 import traceback
 
-from circuits import BaseComponent, handler, Worker, task
-from circuits.tools import tryimport
-from circuits.net.events import read
-from circuits.six import reraise
-
-from circuits.http.wrapper import Client, Host
-from circuits.http.utils import httphandler
-from circuits.http.events import response as RE
-from circuits.http.server.__main__ import HTTPServer
-
 from httoop import Request, Response
 from httoop.gateway.wsgi import WSGI
+
+from circuits import BaseComponent, Worker, handler, task
+from circuits.http.events import response as RE
+from circuits.http.server.__main__ import HTTPServer
+from circuits.http.utils import httphandler
+from circuits.http.wrapper import Client, Host
+from circuits.net.events import read
+from circuits.six import reraise
+from circuits.tools import tryimport
+
 StringIO = tryimport(("cStringIO", "StringIO", "io"), "StringIO")
 
 

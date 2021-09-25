@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
+
+from httoop import BAD_REQUEST, PAYLOAD_TOO_LARGE, UNSUPPORTED_MEDIA_TYPE, DecodeError
+from httoop.header import Accept
 
 from circuits import BaseComponent
 from circuits.http.utils import httphandler
-
-from httoop import BAD_REQUEST, UNSUPPORTED_MEDIA_TYPE, PAYLOAD_TOO_LARGE, DecodeError
-from httoop.header import Accept
 
 
 class RequestContentType(BaseComponent):

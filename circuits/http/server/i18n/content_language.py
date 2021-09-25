@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-from circuits import BaseComponent
-from circuits.http.utils import sets_header, httphandler
+from __future__ import absolute_import, unicode_literals
 
 from httoop import NOT_ACCEPTABLE
+
+from circuits import BaseComponent
+from circuits.http.utils import httphandler, sets_header
 
 
 class ContentLanguage(BaseComponent):

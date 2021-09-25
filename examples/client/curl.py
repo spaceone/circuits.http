@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import sys
 import os
+import sys
 import traceback
 from argparse import ArgumentParser
 
 from httoop import Request
 from httoop.header import Authorization
 
-from circuits import handler, Debugger
+from circuits import Debugger, handler
 from circuits.http.client import HTTPClient
 from circuits.http.events import request as RequestEvent
 from circuits.http.wrapper import Client

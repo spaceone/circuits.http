@@ -4,11 +4,11 @@ from __future__ import absolute_import
 
 import inspect
 
+from httoop import FORBIDDEN, Method as _htMethod
+from httoop.codecs import Codec as _htCodec, lookup as codec_lookup
+
 from circuits import BaseComponent
 from circuits.http.utils import allof
-
-from httoop import Method as _htMethod, FORBIDDEN
-from httoop.codecs import Codec as _htCodec, lookup as codec_lookup
 
 
 def method(func=None, http_method=None, **kwargs):

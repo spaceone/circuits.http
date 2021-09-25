@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
+
+from httoop import NOT_MODIFIED, PRECONDITION_FAILED
 
 from circuits import BaseComponent
-from circuits.http.utils import sets_header, if_header_set, httphandler
-
-from httoop import PRECONDITION_FAILED, NOT_MODIFIED
+from circuits.http.utils import httphandler, if_header_set, sets_header
 
 
 class ETag(BaseComponent):

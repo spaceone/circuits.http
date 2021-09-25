@@ -5,17 +5,19 @@ import os
 import sys
 import zlib
 
-from saml2 import BINDING_HTTP_POST, BINDING_HTTP_ARTIFACT, BINDING_HTTP_REDIRECT
+from httoop import METHOD_NOT_ALLOWED, URI
+from saml2 import BINDING_HTTP_ARTIFACT, BINDING_HTTP_POST, BINDING_HTTP_REDIRECT
 from saml2.client import Saml2Client
 from saml2.metadata import create_metadata_string
-from saml2.response import VerificationError, UnsolicitedResponse, StatusError
+from saml2.response import StatusError, UnsolicitedResponse, VerificationError
 from saml2.s_utils import UnknownPrincipal, UnsupportedBinding, rndstr
 from saml2.sigver import MissingKey, SignatureError
 
-from httoop import URI, METHOD_NOT_ALLOWED
 from circuits import Component, handler
-
-from circuits.http.server.saml.models import SamlError, SamlLogoutRequest, SamlLogoutResponse, SamlAuthnResponse, SamlHTTPResponse, EmptyAuthnResponse, MultipleIdentityProvider, NoIdentityProvider
+from circuits.http.server.saml.models import (
+	EmptyAuthnResponse, MultipleIdentityProvider, NoIdentityProvider, SamlAuthnResponse, SamlError,
+	SamlHTTPResponse, SamlLogoutRequest, SamlLogoutResponse,
+)
 
 
 class ServiceProvider(Component):

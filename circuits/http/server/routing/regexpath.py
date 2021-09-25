@@ -3,10 +3,10 @@
 from __future__ import absolute_import
 
 from circuits import BaseComponent, Event, handler
-from circuits.http.utils import httphandler
+from circuits.http.server.resource import Domain, Resource
 from circuits.http.server.routing.router import Router
 from circuits.http.server.routing.utils import regexpath
-from circuits.http.server.resource import Resource, Domain
+from circuits.http.utils import httphandler
 
 
 class RegexPathRouter(Router):

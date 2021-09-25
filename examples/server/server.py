@@ -1,10 +1,9 @@
-from circuits import handler, BaseComponent, Debugger
-from circuits.net.sockets import TCPServer
-
+from circuits import BaseComponent, Debugger, handler
 from circuits.http.server import HTTP
+from circuits.http.server.log import Logger
 from circuits.http.server.resource import Domain
 from circuits.http.server.routing import DomainRouter
-from circuits.http.server.log import Logger
+from circuits.net.sockets import TCPServer
 
 
 class HTTPServer(BaseComponent):

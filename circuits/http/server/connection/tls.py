@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-from circuits import BaseComponent, handler
-from circuits.net.events import starttls, close, write
-from circuits.http.utils import if_header_set, httphandler
+from __future__ import absolute_import, unicode_literals
 
 from httoop import SWITCHING_PROTOCOLS, Response
+
+from circuits import BaseComponent, handler
+from circuits.http.utils import httphandler, if_header_set
+from circuits.net.events import close, starttls, write
 
 
 class TLS(BaseComponent):

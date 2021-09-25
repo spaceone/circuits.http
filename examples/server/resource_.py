@@ -3,13 +3,15 @@
 curl -i http://localhost:8090/graph
 """
 import sys
+
 sys.path.insert(0, '.')
 from datetime import datetime
 
-from server import HTTPServer as _HTTPServer
-from circuits import handler, BaseComponent, Debugger
+from circuits import BaseComponent, Debugger, handler
+from circuits.http.server.resource import Domain, Method, Resource, method
 from circuits.tools import graph
-from circuits.http.server.resource import Resource, method, Method, Domain
+
+from server import HTTPServer as _HTTPServer
 
 
 class BaseResource(Resource):

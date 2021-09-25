@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 """HTTP server"""
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-from circuits.http.wrapper import Client
+from __future__ import absolute_import, unicode_literals
 
 from httoop.server import ServerStateMachine
+
+from circuits.http.wrapper import Client
 
 
 class StateMachine(ServerStateMachine):

@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
-import types
 import inspect
-
-from circuits import BaseComponent, handler
-from circuits.http.utils import httphandler
-from circuits.http.server.resource.method import Method
-from circuits.http.server.caching import CacheControl, ETag, Expires, IfRange, LastModified, Vary, Pragma
-from circuits.http.server.content import RequestContentType, ContentType, Security, AcceptEncoding
+import types
 
 from httoop import METHOD_NOT_ALLOWED, NOT_IMPLEMENTED
+
+from circuits import BaseComponent, handler
+from circuits.http.server.caching import CacheControl, ETag, Expires, IfRange, LastModified, Pragma, Vary
+from circuits.http.server.content import AcceptEncoding, ContentType, RequestContentType, Security
+from circuits.http.server.resource.method import Method
+from circuits.http.utils import httphandler
 
 
 class Resource(BaseComponent):

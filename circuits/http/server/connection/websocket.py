@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
-import hashlib
 import base64
-
-from circuits import BaseComponent, handler
-from circuits.net.events import connect, disconnect
-from circuits.http.utils import if_header_set, httphandler
-from circuits.http.events import response as RE
-from circuits.protocols.websocket import WebSocketCodec
+import hashlib
 
 from httoop import BAD_REQUEST, SWITCHING_PROTOCOLS
+
+from circuits import BaseComponent, handler
+from circuits.http.events import response as RE
+from circuits.http.utils import httphandler, if_header_set
+from circuits.net.events import connect, disconnect
+from circuits.protocols.websocket import WebSocketCodec
 
 
 class Websocket(BaseComponent):

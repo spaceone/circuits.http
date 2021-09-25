@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-from circuits import BaseComponent
-from circuits.http.utils import if_header_set, httphandler
+from __future__ import absolute_import, unicode_literals
 
 from httoop import EXPECTATION_FAILED, Date, InvalidDate
+
+from circuits import BaseComponent
+from circuits.http.utils import httphandler, if_header_set
 
 
 class IfRange(BaseComponent):

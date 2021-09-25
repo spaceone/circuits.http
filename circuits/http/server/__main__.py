@@ -2,22 +2,21 @@
 """circuits.http.server
 """
 
-import sys
 import os
-from socket import error as SocketError
+import sys
 from argparse import ArgumentParser
+from socket import error as SocketError
 
 from httoop import URI
 
 from circuits import BaseComponent, Debugger
+from circuits.app import Daemon, DropPrivileges
 from circuits.core.helpers import FallBackExceptionHandler
-from circuits.net.sockets import TCPServer, UDPServer, UNIXServer, TCP6Server, UDP6Server
-from circuits.app import DropPrivileges, Daemon
-
-from circuits.http import __version__ as version, __name__ as name
+from circuits.http import __name__ as name, __version__ as version
 from circuits.http.server import HTTP
-from circuits.http.server.routing import DomainRouter
 from circuits.http.server.log import Logger
+from circuits.http.server.routing import DomainRouter
+from circuits.net.sockets import TCP6Server, TCPServer, UDP6Server, UDPServer, UNIXServer
 
 
 class HTTPServer(BaseComponent):

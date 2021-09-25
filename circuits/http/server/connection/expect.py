@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
+
+from httoop import CONTINUE, EXPECTATION_FAILED, Response
 
 from circuits import BaseComponent
+from circuits.http.utils import httphandler, if_header_set
 from circuits.net.events import write
-from circuits.http.utils import if_header_set, httphandler
-
-from httoop import EXPECTATION_FAILED, CONTINUE, Response
 
 
 class Expect(BaseComponent):

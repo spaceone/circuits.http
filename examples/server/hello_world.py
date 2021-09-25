@@ -1,6 +1,7 @@
 from __future__ import absolute_import
+
 from circuits.http.server.__main__ import HTTPServer
-from circuits.http.server.resource import Resource, method, Domain
+from circuits.http.server.resource import Domain, Resource, method
 
 
 class HelloWorld(Resource):

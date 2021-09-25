@@ -7,13 +7,15 @@ curl -i http://localhost:8090/shadow
 """
 
 import sys
+
 sys.path.insert(0, '.')
 from datetime import datetime
 
-from server import HTTPServer as _HTTPServer
-from circuits import handler, BaseComponent, Debugger
+from circuits import BaseComponent, Debugger, handler
+from circuits.http.server.resource import Domain, StaticResource
 from circuits.tools import graph
-from circuits.http.server.resource import StaticResource, Domain
+
+from server import HTTPServer as _HTTPServer
 
 
 class BaseResource(StaticResource):

@@ -5,12 +5,14 @@ curl -i http://localhost:8090/ -X TRACE
 """
 
 import sys
+
 sys.path.insert(0, '.')
 
-from server import HTTPServer
-from resource import BaseResource as Resource
 from circuits import Debugger
 from circuits.http.server.resource import method
+
+from resource import BaseResource as Resource
+from server import HTTPServer
 
 
 class Trace(Resource):

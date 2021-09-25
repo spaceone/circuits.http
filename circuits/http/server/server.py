@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 """HTTP server"""
 
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import absolute_import, print_function
 
 import sys
-from time import time
 from ssl import SSLError
-from traceback import format_tb, format_exception_only
+from time import time
+from traceback import format_exception_only, format_tb
 
-from circuits import BaseComponent, handler, reprhandler, Event
-from circuits.net.utils import is_ssl_handshake
-from circuits.net.events import close, write, read
-from circuits.http.wrapper import Client, Server
-from circuits.http.events import HTTPError, request as RequestEvent, response as ResponseEvent, routing as RoutingEvent
-from circuits.http.server._state import State
-
-from httoop import StatusException, INTERNAL_SERVER_ERROR, Request, Response
+from httoop import INTERNAL_SERVER_ERROR, Request, Response, StatusException
 from httoop.semantic.response import ComposedResponse
+
+from circuits import BaseComponent, Event, handler, reprhandler
+from circuits.http.events import (
+	HTTPError, request as RequestEvent, response as ResponseEvent, routing as RoutingEvent,
+)
+from circuits.http.server._state import State
+from circuits.http.wrapper import Client, Server
+from circuits.net.events import close, read, write
+from circuits.net.utils import is_ssl_handshake
 
 _ResponseStart = type('response.start', (Event,), {})
 _ResponseBody = type('response.body', (Event,), {})

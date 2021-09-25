@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from circuits.six import reraise
-from circuits.core import handler, BaseComponent
-from circuits.net.sockets import TCPClient
-from circuits.net.events import close, connect, write
-
-from circuits.http.events import response as ResponseEvent
-
 from httoop import ClientStateMachine
 from httoop.semantic.request import ComposedRequest
+
+from circuits.core import BaseComponent, handler
+from circuits.http.events import response as ResponseEvent
+from circuits.net.events import close, connect, write
+from circuits.net.sockets import TCPClient
+from circuits.six import reraise
 
 
 class ClientStateMachine(ClientStateMachine):
