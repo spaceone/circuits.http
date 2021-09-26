@@ -1,6 +1,0 @@
-ignore-paths:
-    - examples
-    - docs
-pylint:
-  disable:
-    - super-on-old-class
