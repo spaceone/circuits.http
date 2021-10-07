@@ -64,9 +64,9 @@ class Client(object):
 			'response': None
 		})()
 
-#	def url(self, *path, **query):
-#		# TODO: it could be nice to have a method to generate URL's
-#		pass
+	# def url(self, *path, **query):
+	# 	# TODO: it could be nice to have a method to generate URL's
+	# 	pass
 
 	def __iter__(self):
 		"""(request, response) = client"""

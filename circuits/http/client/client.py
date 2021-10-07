@@ -25,10 +25,10 @@ class HTTPClient(BaseComponent):
 		self._socket_map = {}
 		self._channel_sock = {}
 
-#	@handler("close")
-#	def _on_close(self):  # FIXME: socket argument missing
-#		if self.socket.connected:
-#			self.fire(close(), self.socket)
+	# @handler("close")
+	# def _on_close(self):  # FIXME: socket argument missing
+	# 	if self.socket.connected:
+	# 		self.fire(close(), self.socket)
 
 	@handler('connect', priority=1.0)
 	def _on_connect(self, host=None, port=None, secure=None, certfile=None, keyfile=None, ca_certs=None):
@@ -48,7 +48,7 @@ class HTTPClient(BaseComponent):
 			self._channel_sock[socket.channel] = socket
 		if not socket.connected:
 			self.fire(connect(host, port, secure, certfile=certfile, keyfile=keyfile, ca_certs=ca_certs), socket)
-		#event.stop()  # FIXME: self.call does conflict with this
+		# event.stop()  # FIXME: self.call does conflict with this
 		return socket
 
 	@handler('request')
@@ -76,7 +76,7 @@ class HTTPClient(BaseComponent):
 			self.fire(write(data), client.socket)
 
 		yield client
-		#yield (yield self.wait("response"))
+		# yield (yield self.wait("response"))
 
 	@handler('read', channel='*')
 	def _on_read(self, event, data):

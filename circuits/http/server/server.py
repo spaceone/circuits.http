@@ -63,7 +63,7 @@ class HTTP(BaseComponent):
 			self._add_client(client)
 			self.fire(HTTPError(client, httperror))
 			# TODO: wait for HTTPError event to be processed and close the connection
-		except:
+		except BaseException:
 			client = Client(Request(), Response(), socket, server)
 			self._add_client(client)
 			self.fire(self.default_internal_server_error(client, sys.exc_info()))
@@ -112,8 +112,8 @@ class HTTP(BaseComponent):
 			return
 		if all(client.done for client in state.requests):
 			self.fire(close(socket))
-		#else:
-			# TODO: implement close after last response
+		# else:
+		# TODO: implement close after last response
 
 	@handler("response")
 	def _on_response(self, client):
@@ -176,8 +176,8 @@ class HTTP(BaseComponent):
 			data = next(response.body)
 		except StopIteration:
 			response.body.close()
-			#if response.close:  # conflicts with pipelining?
-			#	self.fire(close(socket))
+			# if response.close:  # conflicts with pipelining?
+			# 	self.fire(close(socket))
 			client.done = True
 			self.fire(_ResponseComplete(client))
 		else:
@@ -236,7 +236,7 @@ class HTTP(BaseComponent):
 		client.response.body = httperror.body
 
 		# fire httperror_XXX event
-#		channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
+		# channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
 		event = Event.create('httperror_%d' % (httperror.status,))
 		self.fire(event, *event.channels)
 
@@ -254,13 +254,13 @@ class HTTP(BaseComponent):
 		"""Handler for exceptions occuring in the request or response event handler"""
 		client = evt.args[0]
 
-#		if client.redirected:
-#			return
-#		if isinstance(evalue, InternalRedirect):
-#			client.request.uri = evalue.uri
-#			client.redirected = True
-#			self.fire(Request(client))
-#			return
+		# if client.redirected:
+		# 	return
+		# if isinstance(evalue, InternalRedirect):
+		# 	client.request.uri = evalue.uri
+		# 	client.redirected = True
+		# 	self.fire(Request(client))
+		# 	return
 
 		# Ignore filtered requests already handled
 		if client.handled:
@@ -358,7 +358,7 @@ class HTTP(BaseComponent):
 		if not isinstance(traceback, (list, tuple)):
 			traceback = format_tb(traceback)
 		httperror.traceback = u''.join(traceback + format_exception_only(*error[:2]))
-#		channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
+		# channels = set([c.channel for c in (self, client.server, client.domain, client.resource) if c is not None])
 		channels = [self.channel]
 		self.fire(HTTPError(client, httperror), *channels)
 
@@ -387,9 +387,9 @@ Instead use the HTTPS scheme to access this URL, please: https://%s"""))  # TODO
 
 		def parse(data):
 			# TODO: if we have a socket with TLS support we should try to use it instead so that we can speak HTTPS and redirect to the other port.
-			#self.fire(write(socket, b'\x15\x03\x01\x00\x02\x02('))
+			# self.fire(write(socket, b'\x15\x03\x01\x00\x02\x02('))
 			self.fire(write(socket, b'\x15\x03\x01\x00\x02\x02G'))
-			#self.fire(write(socket, b'<html><head><title>use plaintext HTTP</title></head><body></body>USE HTTP!</html>'))
+			# self.fire(write(socket, b'<html><head><title>use plaintext HTTP</title></head><body></body>USE HTTP!</html>'))
 			self.fire(close(socket))
 			return parser(b'')
 		self._buffers[socket].parser.parse = parse
