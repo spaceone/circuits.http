@@ -12,8 +12,8 @@ from circuits.net.events import close, starttls, write
 class TLS(BaseComponent):
 
 	@httphandler('request', priority=0.9)
-	@if_header_set('Connection', with_event=True)
-	@if_header_set('Upgrade', with_event=True)
+	@if_header_set('Connection')
+	@if_header_set('Upgrade')
 	def _on_request(self, event, client):
 		request, response = client
 		headers = request.headers

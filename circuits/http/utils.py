@@ -3,7 +3,6 @@
 from __future__ import absolute_import, unicode_literals
 
 from functools import wraps
-from inspect import getargspec
 
 from httoop import StatusException
 
@@ -16,6 +15,7 @@ def sets_header(header, ifmethod=None):
 		ifmethod = (ifmethod,)
 
 	def _decorator(func):
+
 		@wraps(func)
 		def _decorated(self, client, *args, **kwargs):
 			if ifmethod and client.request.method not in ifmethod:
@@ -23,42 +23,39 @@ def sets_header(header, ifmethod=None):
 			value = func(self, client, *args, **kwargs)
 			if value is not None:
 				client.response.headers[header] = value
+
 		return _decorated
+
 	return _decorator
 
 
-def if_header_set(headers, ifmethod=None, with_event=False):
+def if_header_set(headers, ifmethod=None):
 	if not isinstance(ifmethod, (type(None), list, tuple)):
 		ifmethod = (ifmethod,)
 	if not isinstance(headers, (list, tuple)):
 		headers = (headers,)
 
 	def _decorator(func):
+
 		@wraps(func)
 		def _decorated(self, event, client, *args, **kwargs):
 			if ifmethod and client.request.method not in ifmethod:
 				return
 			if any(header in client.request.headers for header in headers):
-				if with_event:
-					return func(self, event, client, *args, **kwargs)
-				return func(self, client, *args, **kwargs)
+				return event_handler.call(func, event, self, client, *args, **kwargs)
+
 		return _decorated
+
 	return _decorator
 
 
 def httperror(func):
-	args = getargspec(func)[0]
-	if args and args[0] == "self":
-		del args[0]
-	with_event = getattr(func, "event", bool(args and args[0] == "event"))
+	event_handler.decorate(func)
 
 	@wraps(func)
 	def _decorated(self, event, client, *args, **kwargs):
 		try:
-			args = tuple([client] + list(args))
-			if with_event:
-				args = tuple([event] + list(args))
-			return func(self, *args, **kwargs)
+			return event_handler.call(func, event, self, client, *args, **kwargs)
 		except BaseException as httperror_:
 			event.stop()
 			channels = set([client.server.channel])

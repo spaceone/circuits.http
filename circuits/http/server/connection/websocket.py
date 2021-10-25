@@ -22,7 +22,7 @@ class Websocket(BaseComponent):
 		self._codecs = {}
 
 	@httphandler('request', priority=0.8)
-	@if_header_set('Upgrade', with_event=True)
+	@if_header_set('Upgrade')
 	def _on_request(self, event, client):
 
 		request, response = client
